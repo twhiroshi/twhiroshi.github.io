@@ -38,6 +38,8 @@
             const regex = /[\s\n\r\t,]+/g;
             result = result.replace(regex,"USDT.P,")
             result += "USDT.P"
+            result = result.replace(",",",BINANCE:");
+            result = "BINANCE:" + result;
             console.log("Copied the text: " + result);
             // Copy the text inside the text field
             // navigator.clipboard.writeText(result);
