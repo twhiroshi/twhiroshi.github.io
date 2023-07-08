@@ -1,1 +1,62 @@
-GithubPages test
+<!DOCTYPE HTML>
+<HTML>
+    <HEAD>
+        <META name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <META http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <TITLE>轉換Tradingview List</TITLE>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    </HEAD>
+    <script type="text/javascript">
+        function download(filename, contents) {
+            const blob = new Blob([contents], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyToClipboard() {
+            // Get the text field
+            var copyText = document.getElementById("coinInputs");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+
+            var copyText2 = document.getElementById("coinInputs2");
+            copyText2.select();
+            copyText2.setSelectionRange(0, 99999); // For mobile devices
+
+            var result = "";
+            if(copyText2.value.length > 0){
+                result = copyText.value + "," + copyText2.value;
+            } else {
+                result = copyText.value
+            }
+            console.log("Copied the text: " + result);
+            const regex = /[\s\n\r\t,]+/g;
+            result = result.replace(regex,"USDT.P,")
+            result += "USDT.P"
+            console.log("Copied the text: " + result);
+            // Copy the text inside the text field
+            // navigator.clipboard.writeText(result);
+            var date = new Date();
+            var dateStr = date.toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' })
+            var filename = "強勢標的_" + dateStr + ".txt"
+            console.log(filename)
+            download(filename, result);
+        }
+    </script>
+    <body>
+        <div class="mb-3">
+            <label for="coinInputs" class="form-label">強勢族群</label>
+            <input type="text" class="form-control" id="coinInputs" placeholder="貼上強勢族群">
+            <label for="coinInputs2" class="form-label">次強勢族群</label>
+            <input type="text" class="form-control" id="coinInputs2" placeholder="貼上次強勢族群">
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" onclick="copyToClipboard()">轉換</button>
+        </div>
+    </body>
+</HTML>
