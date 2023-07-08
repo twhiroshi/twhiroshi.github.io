@@ -27,19 +27,26 @@
             var copyText2 = document.getElementById("coinInputs2");
             copyText2.select();
             copyText2.setSelectionRange(0, 99999); // For mobile devices
-
             var result = "";
-            if(copyText2.value.length > 0){
-                result = copyText.value + "," + copyText2.value;
-            } else {
-                result = copyText.value
-            }
-            console.log("Copied the text: " + result);
             const regex = /[\s\n\r\t,]+/g;
-            result = result.replace(regex,"USDT.P,")
-            result += "USDT.P"
-            result = result.replaceAll(",",",BINANCE:");
-            result = "BINANCE:" + result;
+            var result1 = copyText.value
+            result1 = result1.replace(regex,"USDT.P,");
+            result1 += "USDT.P";
+            result1 = result1.replaceAll(",",",BINANCE:");
+            result1 = "BINANCE:" + result1;
+            result1 = "###強勢族群," + result1
+
+            result = result1;
+
+            if(copyText2.value.length > 0){
+                var result2 = copyText2.value
+                result2 = result2.replace(regex,"USDT.P,");
+                result2 += "USDT.P";
+                result2 = result2.replaceAll(",",",BINANCE:");
+                result2 = "BINANCE:" + result2;
+                result2 = "###次強勢族群," + result2;
+                result = result + "," + result2;
+            }
             console.log("Copied the text: " + result);
             // Copy the text inside the text field
             // navigator.clipboard.writeText(result);
