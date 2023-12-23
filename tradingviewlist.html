@@ -56,6 +56,46 @@
             console.log(filename)
             download(filename, result);
         }
+
+        function copyToClipboard2() {
+            const regex = /[\s\n\r\t,]+/g;
+            var copyText3 = document.getElementById("coinInputs3");
+            copyText3.select();
+            copyText3.setSelectionRange(0, 99999); // For mobile devices
+            var texts = copyText3.value.split("\n");
+            var dateText = "";
+            var result = "###大盤,BINANCE:BTCUSDT.P,BINANCE:ETHUSDT.P,BINANCE:BNBUSDT.P,";
+            for(var i=0;i<texts.length;i++){
+                console.log(texts[i]);
+                if (texts[i].match(/([0-9]{8})/)) {
+                    var words = texts[i].split(" ");
+                    for(var j=0;i<words.length;j++){
+                        console.log(j)
+                        if(words[j].length > 0 && words[j].match(/([0-9]{8})/)){
+                           dateText = words[j].replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
+                           break;
+                        }
+                    }
+                } else if (texts[i].match(/：/)) {
+                    var result1 = texts[i].split("：")[1];
+                    result1 = result1.replace(regex,"USDT.P,");
+                    result1 += "USDT.P";
+                    result1 = result1.replaceAll(",",",BINANCE:");
+                    result1 = "BINANCE:" + result1;
+                    if(texts[i].indexOf("次強勢族群") > -1){
+                        result1 = "###次強勢族群," + result1;
+                    } else {
+                        result1 = "###強勢族群," + result1;
+                    }
+                    result = result + result1 + ","
+                }
+            }
+            result = result.slice(0, -1)
+            console.log(dateText);
+            console.log(result)
+            var filename = "強勢標的_" + dateText + ".txt";
+            download(filename, result);
+        }
     </script>
     <body>
         <div class="mb-3">
@@ -66,6 +106,14 @@
         </div>
         <div class="mb-3">
             <button type="submit" class="btn btn-primary" onclick="copyToClipboard()">轉換</button>
+        </div>
+        <br />
+        <div class="mb-3">
+            <label for="coinInputs3" class="form-label">直接轉換強勢族群</label>
+            <textarea class="form-control" id="coinInputs3" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" onclick="copyToClipboard2()">轉換</button>
         </div>
     </body>
 </HTML>
