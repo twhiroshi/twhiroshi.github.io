@@ -16,7 +16,9 @@
     現在時間 <input id="seed" size="50"><br/>
     抽出幾位學生 <input id="students" maxlength="3">
   </h1>
-
+  <div class="shuffle">
+    <button onclick="load();">載入抽籤名單</button>
+  </div>
   <div class='candidate'>
     <h2 class='title'>
       抽籤名單
@@ -40,11 +42,19 @@
   </div>
 
   <script>
-    var checks = [
-      '測試用1',
-      '測試用2'
-      ];
-    
+    var checks = [];
+    var students = [];
+
+    async function load() {
+      $('#name-list').val('讀取清單中');
+      $('#result').html('');
+      let url = 'https://script.googleusercontent.com/macros/echo?user_content_key=XZnlSyVWOpaql4OZACpCsfssuXGa39Dy3C7qkPTj8at4AuwV1upqWBx328blZ3BYDqu3VvikSzeRajoHSBdWTc0H37RT9yUSm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnKPP57R3bUqBLh_eGcYKN4QckXd3sznclTJX6syHamkqfOVAqSghPbwTSVbEeUY2X1u4VbgHyI7ZyHcVyrHQmvpsDUKhsF-c19z9Jw9Md8uu&lib=MRZUqNKkStlq-C7tNt3eFbJ--GrCY8BKj';
+      let obj = await (await fetch(url)).json();
+      checks = obj.list2;
+      students = obj.list1;
+      $('#name-list').val(students.join("\n"));
+    }
+
     function exec() {
       var stuLimit = parseInt(document.getElementById('students').value);
       var list = $('#name-list').val().replace(/\n+$/, '').replace(/&/g, '&amp;').replace(/>/g, '&gt;').replace(/</g, '&lt;').replace(/\"/g, '&quot;').split(/\n+/).sort();
@@ -88,7 +98,7 @@
       const date = new Date(+new Date() + 8 * 3600 * 1000)
       const result = date.toISOString().replace('T', ' ').split('.')[0]
       document.getElementById('seed').value = result
-    　setTimeout('ShowTime()',1000);
+      setTimeout('ShowTime()',1000);
     }
   </script>
 </body>
