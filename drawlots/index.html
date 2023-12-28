@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="jquery-3.2.1.min.js"></script>
+  <script src="seedrandom.js"></script>
+  <script src="sha3.min.js"></script>
+  <title>抽籤網頁</title>
+  <link rel="stylesheet" href="global.css">
+</head>
+
+<body onload="ShowTime();">
+
+  <h1 class='seed'>
+    現在時間 <input id="seed" size="50"><br/>
+    抽出幾位學生 <input id="students" maxlength="3">
+  </h1>
+
+  <div class='candidate'>
+    <h2 class='title'>
+      抽籤名單
+    </h2>
+    <div class="input">
+      <div class="meta">
+        請輸入名單（以換行分開）
+      </div>
+      <textarea id="name-list" rows="30"></textarea>
+    </div>
+    <div class="output">
+      <div class="meta">
+        抽籤結果
+      </div>
+      <div id="result" class='area'></div>
+    </div>
+  </div>
+
+  <div class="shuffle">
+    <button onclick="exec();">進行抽籤</button>
+  </div>
+
+  <script>
+    var checks = [
+      '測試用1',
+      '測試用2'
+      ];
+    
+    function exec() {
+      var stuLimit = parseInt(document.getElementById('students').value);
+      var list = $('#name-list').val().replace(/\n+$/, '').replace(/&/g, '&amp;').replace(/>/g, '&gt;').replace(/</g, '&lt;').replace(/\"/g, '&quot;').split(/\n+/).sort();
+      var seed = $('#seed').val();
+      Math.seedrandom(sha3_512(seed));
+      list = shuffle(list);
+      // list = list.filter(e => !checks.includes(e));
+      list = list.filter(e => !checks.some(v => e.includes(v)));
+      list = list.slice(0, stuLimit);
+      var res = list.join('</li><li>');
+      res = '<ol><li>' + res + '</li></ol>';
+      $('#result').html(res);
+    }
+
+    function shuffle(array) {
+      var currentIndex = array.length,
+        temporaryValue, randomIndex;
+
+      // While there remain elements to shuffle...
+      while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
+
+      return array;
+    }
+
+    function ShowTime(){
+    // 　var NowDate=new Date();
+    // 　var h=NowDate.getHours();
+    // 　var m=NowDate.getMinutes();
+    // 　var s=NowDate.getSeconds();　
+    // 　document.getElementById('seed').value = h+'時'+m+'分'+s+'秒';
+      const date = new Date(+new Date() + 8 * 3600 * 1000)
+      const result = date.toISOString().replace('T', ' ').split('.')[0]
+      document.getElementById('seed').value = result
+    　setTimeout('ShowTime()',1000);
+    }
+  </script>
+</body>
+
+</html>

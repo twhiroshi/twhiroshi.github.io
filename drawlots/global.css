@@ -1,0 +1,83 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft JhengHei','Heiti TC', sans-serif;
+    background-color: #DDD;
+    color: #111;
+}
+
+::selection {
+    background: #a5c715;
+    color: #fff;
+}
+
+.seed, .candidate, .shuffle {
+    max-width: 1180px;
+    margin: 1em auto;
+    text-align: center;
+}
+
+.seed input {
+    font-size: 1em;
+    width: 70%;
+    vertical-align: middle;
+    padding: 0 1ch;
+    border-width: 0;
+    border-radius: .2em;
+}
+
+.candidate {
+    display: flex;
+    flex-flow: row wrap;
+    width: 100%;
+}
+
+.title {
+    flex: 0 0 100%;
+}
+
+.input, .output {
+    flex: 0 0 50%;
+}
+.meta {
+    margin: 0 0 .5em 0;
+}
+
+.input textarea {
+    margin: 0 auto;
+    width: 80%;
+    height: 50vh;
+    border-width: 0;
+    border-radius: .2em;
+    padding: 1em;
+}
+
+.output .area {
+    background-color: #ffe;
+    margin: 0 auto;
+    width: 80%;
+    height: 50vh;
+    border-width: 0;
+    border-radius: .2em;
+    text-align: left;
+    overflow: auto;
+}
+
+.output .area ol {
+    margin: 0;
+}
+
+.shuffle button {
+    height: 3em;
+    width: 50%;
+    color: #fff;
+    background-color: #296eb7;
+    border: 0;
+}
+button:hover {
+    /*transform: scale(1.02, 1.05);*/
+    transition: all .2s ease;
+    box-shadow: 0 1px 5px 1px gray;
+}
