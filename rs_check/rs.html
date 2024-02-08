@@ -7,7 +7,12 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.css">
   <script>
-  	function showText(isShow){
+    var coins = [];
+    var coinCounts = [];
+    var coinDates = [];
+    var dateRange = '';
+  	
+    function showText(isShow){
   		if(isShow == true){
   			document.getElementById("t1").style.visibility = "visible";
   			document.getElementById("t2").style.visibility = "visible";
@@ -26,10 +31,7 @@
   	}
 
   	function initData(){
-        var coins = [];
-        var coinCounts = [];
-        var coinDates = [];
-        
+        dateRange = rsDatas[0][0] + '-' + rsDatas[rsDatas.length-1][0]
         $('#rsTitle').text(rsDatas[0][0] + '~' + rsDatas[rsDatas.length-1][0] + ' 強勢標的分析')
         //get all coins
         rsDatas.forEach((rs) => {
@@ -71,8 +73,9 @@
 
     function detailFormatter(index, row) {
         var html = []
+        var coin = ''
         $.each(row, function (key, value) {
-            console.log(key, value)
+            // console.log(key, value)
             if(key == 'dates'){
                 var arrs = value.split(',')
                 var table = '<table class="table table-bordered">'
@@ -87,9 +90,45 @@
                 }
                 table = table + '</table>'
                 html.push('<p><b>出現日期:</b> ' + table + '</p>')
+            } else if(key == 'coin'){
+                coin = value;
             }
         })
+        html.push('<p><button onclick="getPineScript(\'' + coin + '\')">產生 ' + coin + ' Pine Script</button></p>')
         return html.join('')
+    }
+
+    function download(filename, contents) {
+        const blob = new Blob([contents], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function getPineScript(coin){
+        var idx = coins.indexOf(coin)
+        var dates = coinDates[idx].split(",")
+        var dateStr = ''
+        // console.log(coin, dates)
+        for(let i=0;i<dates.length;i++){
+            dateStr = dateStr + 'timestamp("' + dates[i].replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") + '")'
+            if(i != dates.length-1){
+                dateStr = dateStr + ','
+            }
+        }
+        
+        var result = `//@version=5\n\
+indicator("${coin} RS Check", overlay = true)\n\
+start_date = array.from(${dateStr})
+for date in start_date\n\
+    label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
+`
+        // console.log(str)
+        download(`RS_PineScript_${dateRange}_${coin}.txt`, result)
     }
   </script>
 </head>
