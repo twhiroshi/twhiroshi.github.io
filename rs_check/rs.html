@@ -364,11 +364,11 @@
                 var arrs = value.split(',')
                 var table = '<table class="table table-bordered">'
                 for(let i=0;i<arrs.length;i++){
-                    if(i % 5 == 0){
+                    if(i % 4 == 0){
                         table = table + '<tr>' 
                     }
                     table = table + '<td>' + arrs[i]+'</td>'
-                    if(i % 5 == 4 || i == arrs.length - 1){
+                    if(i % 4 == 3 || i == arrs.length - 1){
                         table = table + '</tr>'
                     }
                 }
