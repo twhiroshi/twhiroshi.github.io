@@ -54,7 +54,11 @@
         var result = []
         for (let i = 0; i < coins.length; i++) {
             var d = coinDates[i].split(',')
-            result.push({'coin':coins[i], 'count':coinCounts[i], 'dates':coinDates[i], 'lastdate':d[d.length-1]});
+            var b = '無'
+            if(d.length > 1){
+                b = d[d.length-2];
+            }
+            result.push({'coin':coins[i], 'count':coinCounts[i], 'dates':coinDates[i], 'lastdate':d[d.length-1], 'beforelastdate': b});
         }
 
         // console.log(result)
@@ -128,6 +132,11 @@
                 <th data-field="lastdate" data-sortable="true"> 
                     <span class="text-success"> 
                         最新出現日期
+                    </span> 
+                </th> 
+                <th data-field="beforelastdate" data-sortable="true"> 
+                    <span class="text-success"> 
+                        再前一次出現日期
                     </span> 
                 </th> 
           </tr> 
