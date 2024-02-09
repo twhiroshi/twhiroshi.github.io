@@ -94,7 +94,8 @@
                 coin = value;
             }
         })
-        html.push('<p><button onclick="getPineScript(\'' + coin + '\')">產生 ' + coin + ' Pine Script</button></p>')
+        html.push('<p><button onclick="getPineScript(\'' + coin + '\')">產生 ' + coin + ' Pine Script檔案</button></p>')
+        html.push('<p><button onclick="getPineScriptInBoard(\'' + coin + '\')">複製 ' + coin + ' Pine Script到剪貼簿</button></p>')
         return html.join('')
     }
 
@@ -129,6 +130,27 @@ for date in start_date\n\
 `
         // console.log(str)
         download(`RS_PineScript_${dateRange}_${coin}.txt`, result)
+    }
+
+    function getPineScriptInBoard(coin){
+        var idx = coins.indexOf(coin)
+        var dates = coinDates[idx].split(",")
+        var dateStr = ''
+        // console.log(coin, dates)
+        for(let i=0;i<dates.length;i++){
+            dateStr = dateStr + 'timestamp("' + dates[i].replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") + '")'
+            if(i != dates.length-1){
+                dateStr = dateStr + ','
+            }
+        }
+        
+        var result = `//@version=5\n\
+indicator("${coin} RS Check", overlay = true)\n\
+start_date = array.from(${dateStr})
+for date in start_date\n\
+    label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
+`
+        navigator.clipboard.writeText(result)
     }
   </script>
 </head>
