@@ -123,7 +123,7 @@
         }
         
         var result = `//@version=5\n\
-indicator("${coin} RS Check", overlay = true)\n\
+indicator("${coin} RS Check", overlay = true, max_labels_count = 500)\n\
 start_date = array.from(${dateStr})
 for date in start_date\n\
     label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
@@ -145,11 +145,63 @@ for date in start_date\n\
         }
         
         var result = `//@version=5\n\
-indicator("${coin} RS Check", overlay = true)\n\
+indicator("${coin} RS Check", overlay = true, max_labels_count = 500)\n\
 start_date = array.from(${dateStr})
 for date in start_date\n\
     label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
 `
+        navigator.clipboard.writeText(result)
+    }
+
+    function getTodayPineScript(){
+        var latestDay = rsDatas[rsDatas.length-1][0]
+        var coinStrs = `start_date = switch syminfo.ticker\n`
+        for(var i=0;i<coins.length;i++){
+            var dates = coinDates[i].split(",")
+            if(dates[dates.length-1] == latestDay || coins[i] == 'BTC' || coins[i] == 'ETH' || coins[i] == 'BNB'){
+                var dateStr = ''
+                for(let i=0;i<dates.length;i++){
+                    dateStr = dateStr + 'timestamp("' + dates[i].replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") + '")'
+                    if(i != dates.length-1){
+                        dateStr = dateStr + ','
+                    }
+                }
+                coinStrs += `    "${coins[i]}USDT.P" => array.from(${dateStr})\n`
+            }
+        }
+        var result = `//@version=5\n\
+indicator("${latestDay} RS Check", overlay = true, max_labels_count = 500)\n\
+${coinStrs}
+for date in start_date\n\
+    label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
+`
+        // console.log(result)
+        download(`RS_All_PineScript_${dateRange}.txt`, result)
+    }
+
+    function getTodayPineScriptInBoard(){
+        var latestDay = rsDatas[rsDatas.length-1][0]
+        var coinStrs = `start_date = switch syminfo.ticker\n`
+        for(var i=0;i<coins.length;i++){
+            var dates = coinDates[i].split(",")
+            if(dates[dates.length-1] == latestDay || coins[i] == 'BTC' || coins[i] == 'ETH' || coins[i] == 'BNB'){
+                var dateStr = ''
+                for(let i=0;i<dates.length;i++){
+                    dateStr = dateStr + 'timestamp("' + dates[i].replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") + '")'
+                    if(i != dates.length-1){
+                        dateStr = dateStr + ','
+                    }
+                }
+                coinStrs += `    "${coins[i]}USDT.P" => array.from(${dateStr})\n`
+            }
+        }
+        var result = `//@version=5\n\
+indicator("${latestDay} RS Check", overlay = true, max_labels_count = 500)\n\
+${coinStrs}
+for date in start_date\n\
+    label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
+`
+        // console.log(result)
         navigator.clipboard.writeText(result)
     }
   </script>
@@ -158,6 +210,8 @@ for date in start_date\n\
 <div class="container">
     <div>
         <h2 id="rsTitle"></h2>
+        <button onclick="getTodayPineScript()">取得最新一日強勢幣之Pine Script檔案</button>
+        <button onclick="getTodayPineScriptInBoard()">複製最新一日強勢幣之Pine Script到剪貼簿</button>
     </div>
     <div class="table-responsive">
      <table id="coinsTable"
