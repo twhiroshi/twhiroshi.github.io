@@ -124,9 +124,10 @@
         
         var result = `//@version=5\n\
 indicator("${coin} RS Check", overlay = true, max_labels_count = 500)\n\
-start_date = array.from(${dateStr})
-for date in start_date\n\
-    label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
+if syminfo.ticker == "${coin}USDT.P"\n\
+    start_date = array.from(${dateStr})
+    for date in start_date\n\
+        label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
 `
         // console.log(str)
         download(`RS_PineScript_${dateRange}_${coin}.txt`, result)
@@ -146,9 +147,10 @@ for date in start_date\n\
         
         var result = `//@version=5\n\
 indicator("${coin} RS Check", overlay = true, max_labels_count = 500)\n\
-start_date = array.from(${dateStr})
-for date in start_date\n\
-    label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
+if syminfo.ticker == "${coin}USDT.P"\n\
+    start_date = array.from(${dateStr})
+    for date in start_date\n\
+        label.new(x=date, y=high, yloc=yloc.abovebar, xloc=xloc.bar_time, color=color.new(color.silver, 0), style=label.style_triangledown, size=size.auto)
 `
         navigator.clipboard.writeText(result)
     }
