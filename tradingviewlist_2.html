@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<HTML>
+    <HEAD>
+        <META name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <META http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <TITLE>轉換Tradingview List</TITLE>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    </HEAD>
+    <script type="text/javascript">
+        function download(filename, contents) {
+            const blob = new Blob([contents], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyToLocalStorage() {
+            var copyText3 = document.getElementById("coinInputs3");
+            copyText3.select();
+            copyText3.setSelectionRange(0, 99999); // For mobile devices
+
+            var text = copyText3.value.replace(/\s/g, '');
+            console.log(text)
+            let datePattern = /🗓(\d+)/g;
+            let firstPattern = /強勢族群：(.*?)\n/g;
+            let secondPattern = /次強勢族群：(.*?)\n/g;
+            let othersPattern = /(.*?)\n/g;
+
+            let dates = [...text.matchAll(datePattern)].map(match => match[1]);
+            let uniqueDates = [...new Set(dates)]; // Remove duplicate dates
+            text = text.replaceAll('🗓'+uniqueDates, '\n').replaceAll('🔸', '\n');
+            console.log(text);
+            let firstGroup = [...text.matchAll(firstPattern)].map(match => match[1]);
+            console.log(firstGroup)
+            firstGroup = firstGroup.slice(0, -1);
+            let secondGroup = [...text.matchAll(secondPattern)].map(match => match[1]);
+            var tmp = text.split('\n').slice(4);
+            let otherGroup = [tmp[0] + ',' + tmp[1]];
+            console.log(otherGroup)
+            
+            var jsonData = {
+                uniqueDates: uniqueDates,
+                firstGroup: firstGroup,
+                secondGroup: secondGroup,
+                otherGroup: otherGroup
+            };
+
+            var jsonString = JSON.stringify(jsonData);
+
+            var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
+            var uniqueDatesInJson = jsonData.uniqueDates;
+            var filteredData = storedData.filter(function(data) {
+                return !uniqueDatesInJson.includes(data.uniqueDates[0]);
+            });
+            filteredData.unshift(jsonData);
+            filteredData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
+            filteredData = filteredData.slice(0, 10);
+            localStorage.setItem('targetData', JSON.stringify(filteredData));
+            console.log(filteredData);
+
+            refreshTable();
+        }
+
+        function refreshTable() {
+            var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
+
+            var resultTableBody = document.getElementById("resultTableBody");
+            resultTableBody.innerHTML = ""; // Clear previous table rows
+            storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
+
+            storedData.forEach(function(data) {
+                var row = document.createElement("tr");
+
+                var dateCell = document.createElement("td");
+                dateCell.textContent = data.uniqueDates[0];
+                row.appendChild(dateCell);
+
+                var firstGroupCell = document.createElement("td");
+                firstGroupCell.textContent = data.firstGroup.join(", ");
+                row.appendChild(firstGroupCell);
+
+                var secondGroupCell = document.createElement("td");
+                secondGroupCell.textContent = data.secondGroup.join(", ");
+                row.appendChild(secondGroupCell);
+
+                var otherGroupCell = document.createElement("td");
+                otherGroupCell.textContent = data.otherGroup[0];
+                row.appendChild(otherGroupCell);
+
+                resultTableBody.appendChild(row);
+            });
+        }
+
+        function downloadLatestDay() {
+            var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
+            storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
+            var latestData = storedData[0];
+            var result = ""
+            result += "###強勢族群：" + latestData.firstGroup.join(",") + ",";
+            result += "###次強勢族群：" + latestData.secondGroup.join(",") + ",";
+            result += "###續強漸強：" +latestData.otherGroup[0];
+
+            result = result.replaceAll(",","USDT.P,BINANCE:");
+            result = result.replaceAll("BINANCE:###","\n###");
+            result = result.replaceAll("：",",BINANCE:");
+            result = result + "USDT.P";
+            result = "###大盤,BINANCE:BTCUSDT.P,BINANCE:ETHUSDT.P,BINANCE:BNBUSDT.P,\n" + result;
+            
+            console.log(result)
+            var filename = "強勢標的_" + latestData.uniqueDates[0] + ".txt"
+            download(filename, result);
+        }
+
+        function download5Day() {
+            var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
+            storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
+            var top7Data = storedData.slice(0, 7);
+            var result = [];
+            top7Data.forEach(function(data) {
+                var tmp = data.firstGroup.join(",") + "," + data.secondGroup.join(",") + "," + data.otherGroup[0];
+                tmp = "\n###" + data.uniqueDates[0]+"：" + tmp + ",";
+                tmp = tmp.replaceAll(",","USDT.P,BINANCE:");
+                tmp = tmp.replaceAll("：",",BINANCE:");
+                tmp = tmp.slice(0, -8);
+                result.push(tmp);
+            });
+            result = result.join("");
+            result = result.slice(0, -1);
+            result = result.slice(1);
+            console.log(result)
+            var filename = "最近強勢標的_" + top7Data[0].uniqueDates[0] + '_' + top7Data[top7Data.length-1].uniqueDates[0] + ".txt";
+            download(filename, result);
+        }
+    </script>
+    <body onload="refreshTable();">
+        <div class="mb-3">
+            <label for="coinInputs3" class="form-label">直接轉換強勢族群</label>
+            <textarea class="form-control" id="coinInputs3" rows="7"></textarea>
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" onclick="copyToLocalStorage()">存入暫存區</button>
+            <button type="submit" class="btn btn-primary" onclick="downloadLatestDay()">匯出最新一筆</button>
+            <button type="submit" class="btn btn-primary" onclick="download5Day()">匯出最近五筆</button>
+        </div>
+        <div class="mt-5">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>強勢族群</th>
+                        <th>次強勢族群</th>
+                        <th>續強漸強</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTableBody"></tbody>
+            </table>
+        </div>
+    </body>
+</HTML>
