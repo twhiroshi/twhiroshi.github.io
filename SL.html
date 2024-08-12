@@ -166,7 +166,7 @@
             localStorage.setItem('SL_filename', filename);
 
             if (nohup) {
-                const result = `nohup python3 ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} &`;
+                const result = `nohup python3 -u ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} &`;
                 const resultInput = document.getElementById('result');
                 resultInput.value = result;
 
