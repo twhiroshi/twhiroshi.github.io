@@ -75,6 +75,8 @@
                 <div class="form-group col-md-6">
                     <label for="nohup">是否使用nohup</label>
                     <input type="checkbox" id="nohup" value="true">
+                    <label for="iscont">是否為中斷重新執行</label>
+                    <input type="checkbox" id="iscont" value="false">
                 </div>
             </div>
             <button type="button" class="btn btn-primary" onclick="concatenateAndCopy()">產生命令並複製到剪貼簿</button>
@@ -132,6 +134,7 @@
             const Leverage = document.getElementById('Leverage').value;
             const margin = document.getElementById('margin');
             const filename = document.getElementById('filename').value;
+            const iscont = document.getElementById('iscont').checked;
 
             if (long === short) {
                 alert('作多與作空標的不可相同');
@@ -165,25 +168,28 @@
             localStorage.setItem('SL_Leverage', Leverage);
             localStorage.setItem('SL_filename', filename);
 
+            var result = '';
             if (nohup) {
-                const result = `nohup python3 -u ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} &`;
-                const resultInput = document.getElementById('result');
-                resultInput.value = result;
-
-                // Copy to clipboard
-                resultInput.select();
-                document.execCommand('copy');
-                return;
+                if(iscont) {
+                    result = `nohup python3 -u ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} -cont &`;
+                } else {
+                    result = `nohup python3 -u ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} &`;
+                }
             } else {
-                const result = `python3 ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage}`;
-                const resultInput = document.getElementById('result');
-                resultInput.value = result;
-
-                // Copy to clipboard
-                resultInput.select();
-                document.execCommand('copy');
-                return;
+                if(iscont) {
+                    result = `python3 ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} -cont`;
+                } else {
+                    result = `python3 ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage}`;    
+                }    
             }
+
+            const resultInput = document.getElementById('result');
+            resultInput.value = result;
+            // Copy to clipboard
+            resultInput.select();
+            document.execCommand('copy');
+
+            return;
         }
     </script>
 </body>
