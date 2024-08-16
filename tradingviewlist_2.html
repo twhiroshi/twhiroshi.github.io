@@ -117,7 +117,7 @@
             download(filename, result);
         }
 
-        function download5Day() {
+        function download7Day() {
             var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
             storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
             var top7Data = storedData.slice(0, 7);
@@ -146,7 +146,7 @@
         <div class="mb-3">
             <button type="submit" class="btn btn-primary" onclick="copyToLocalStorage()">存入暫存區</button>
             <button type="submit" class="btn btn-primary" onclick="downloadLatestDay()">匯出最新一筆</button>
-            <button type="submit" class="btn btn-primary" onclick="download5Day()">匯出最近五筆</button>
+            <button type="submit" class="btn btn-primary" onclick="download7Day()">匯出最近七筆</button>
         </div>
         <div class="mt-5">
             <table class="table">
