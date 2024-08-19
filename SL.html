@@ -48,12 +48,18 @@
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="SL">SL</label>
-                    <input type="text" class="form-control" id="SL" placeholder="輸入SL的%, 例:若停損為1.5%, 輸入1.5">
+                    <label for="SL">SL (若停損為正數下面選單請選擇正)</label>
+                    <div class="form-inline">
+                        <select class="form-control" id="isSLMinus">
+                            <option value="SL_Minus" selected>負</option>
+                            <option value="SL_Plus">正</option>
+                        </select>
+                        <input type="text" class="form-control" id="SL" placeholder="輸入SL的%">
+                    </div>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="TP">TP</label>
-                    <input type="text" class="form-control" id="TP" placeholder="輸入TP的%, 例:若停利為4.5%, 輸入4.5">
+                    <input type="text" class="form-control" id="TP" placeholder="輸入TP的%">
                 </div>
             </div>
             <div class="form-row">
@@ -128,13 +134,14 @@
             const long = document.getElementById('long').value;
             const short = document.getElementById('short').value;
             const R = document.getElementById('R').value;
-            const SL = document.getElementById('SL').value;
+            var SL = document.getElementById('SL').value;
             const TP = document.getElementById('TP').value;
             const nohup = document.getElementById('nohup').checked;
             const Leverage = document.getElementById('Leverage').value;
             const margin = document.getElementById('margin');
             const filename = document.getElementById('filename').value;
             const iscont = document.getElementById('iscont').checked;
+            const isSLMinus = document.getElementById('isSLMinus').value;
 
             if (long === short) {
                 alert('作多與作空標的不可相同');
@@ -154,6 +161,10 @@
             if (filename === '') {
                 alert('請輸入Python檔名');
                 return;
+            }
+
+            if (isSLMinus === 'SL_Minus') {
+                SL = -SL;
             }
 
             const marginValue = (R / (SL / 100) / Leverage*2).toFixed(2);
