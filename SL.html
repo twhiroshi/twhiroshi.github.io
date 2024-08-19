@@ -163,9 +163,6 @@
                 return;
             }
 
-            if (isSLMinus === 'SL_Minus') {
-                SL = -SL;
-            }
 
             const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
             margin.innerHTML = `估算保證金：${marginValue}U`;
@@ -179,6 +176,10 @@
             localStorage.setItem('SL_Leverage', Leverage);
             localStorage.setItem('SL_filename', filename);
 
+            if (isSLMinus === 'SL_Minus') {
+                SL = -SL;
+            }
+            
             var result = '';
             if (nohup) {
                 if(iscont) {
