@@ -167,7 +167,7 @@
                 SL = -SL;
             }
 
-            const marginValue = (R / (SL / 100) / Leverage*2).toFixed(2);
+            const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
             margin.innerHTML = `估算保證金：${marginValue}U`;
             // Store values in localStorage
             localStorage.setItem('SL_long', long);
