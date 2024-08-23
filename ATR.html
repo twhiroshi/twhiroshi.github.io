@@ -124,9 +124,9 @@
             // Concatenate the command
             var result = ''
             if (nohup) {
-                result = `nohup python3 -u ${filename} -coin ${coin} -period ${period} -R ${R} -q ${Quantity} -op ${op} --sp ${sp} -atr ${ATR} &`;
+                result = `nohup python3 -u ${filename} -coin ${coin} -period ${period} -r ${R} -q ${Quantity} -op ${op} -sp ${sp} -atr ${ATR} &`;
             } else {
-                result = `python3 -u ${filename} -coin ${coin} -period ${period} -R ${R} -q ${Quantity} -op ${op} --sp ${sp} -atr ${ATR}`;
+                result = `python3 -u ${filename} -coin ${coin} -period ${period} -r ${R} -q ${Quantity} -op ${op} -sp ${sp} -atr ${ATR}`;
             }
 
             const resultInput = document.getElementById('result');
