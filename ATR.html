@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATR命令產生器(2024/09/21)</title>
+    <title>ATR命令產生器(2024/09/20)</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body onload="initForm()">
     <div class="container mt-5">
-        <h2>ATR命令產生器(2024/09/21)</h2>
+        <h2>ATR命令產生器(2024/09/20)</h2>
         <form id="mainForm">
             <div class="form-row">
                 <div class="form-group col-md-6">
@@ -100,8 +100,8 @@
 
         function concatenateAndCopy() {
             // Read values from the form
-            const coin = document.getElementById('coin').value;
-            const period = document.getElementById('period').value;
+            const coin = document.getElementById('coin').value.toUpperCase();
+            const period = document.getElementById('period').value.toLowerCase();
             const R = document.getElementById('R').value;
             const Quantity = document.getElementById('Quantity').value;
             const op = document.getElementById('op').value;
