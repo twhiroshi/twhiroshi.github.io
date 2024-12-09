@@ -3,66 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多空命令產生器</title>
+    <title>多空命令產生器(2024/09/17)</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body onload="initForm()">
     <div class="container mt-5">
-        <h2>多空命令產生器</h2>
+        <h2>多空命令產生器(2024/09/17)</h2>
         <form id="mainForm">
-            <div class="form-group">
-                <label for="long">作多</label>
-                <select class="form-control" id="long">
-                    <option value="BTC" selected>BTC</option>
-                    <option value="ETH">ETH</option>
-                    <option value="ETC">ETC</option>
-                    <option value="ATOM">ATOM</option>
-                    <option value="MATIC">MATIC</option>
-                    <option value="ADA">ADA</option>
-                    <option value="AVAX">AVAX</option>
-                    <option value="DOT">DOT</option>
-                    <option value="BNB">BNB</option>
-                    <option value="SOL">SOL</option>
-                    <option value="XRP">XRP</option>
-                    <option value="LTC">LTC</option>
-                </select>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="long">作多</label>
+                    <select class="form-control" id="long">
+                        <option value="BTC" selected>BTC</option>
+                        <option value="ETH">ETH</option>
+                        <option value="ETC">ETC</option>
+                        <option value="ATOM">ATOM</option>
+                        <option value="POL">POL</option>
+                        <option value="ADA">ADA</option>
+                        <option value="AVAX">AVAX</option>
+                        <option value="DOT">DOT</option>
+                        <option value="BNB">BNB</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                        <option value="LTC">LTC</option>
+                        <option value="DOGE">DOGE</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="short">作空</label>
+                    <select class="form-control" id="short">
+                        <option value="BTC">BTC</option>
+                        <option value="ETH" selected>ETH</option>
+                        <option value="ETC">ETC</option>
+                        <option value="ATOM">ATOM</option>
+                        <option value="POL">POL</option>
+                        <option value="ADA">ADA</option>
+                        <option value="AVAX">AVAX</option>
+                        <option value="DOT">DOT</option>
+                        <option value="BNB">BNB</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                        <option value="LTC">LTC</option>
+                        <option value="DOGE">DOGE</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="short">作空</label>
-                <select class="form-control" id="short">
-                    <option value="BTC">BTC</option>
-                    <option value="ETH" selected>ETH</option>
-                    <option value="ETC">ETC</option>
-                    <option value="ATOM">ATOM</option>
-                    <option value="MATIC">MATIC</option>
-                    <option value="ADA">ADA</option>
-                    <option value="AVAX">AVAX</option>
-                    <option value="DOT">DOT</option>
-                    <option value="BNB">BNB</option>
-                    <option value="SOL">SOL</option>
-                    <option value="XRP">XRP</option>
-                    <option value="LTC">LTC</option>
-                </select>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="SL">SL (若停損為正數下面選單請選擇正)</label>
+                    <div class="form-inline">
+                        <select class="form-control" id="isSLMinus">
+                            <option value="SL_Minus" selected>負</option>
+                            <option value="SL_Plus">正</option>
+                        </select>
+                        <input type="text" class="form-control" id="SL" placeholder="輸入SL的%">
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="TP">TP</label>
+                    <input type="text" class="form-control" id="TP" placeholder="輸入TP的%">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="R">R</label>
-                <input type="text" class="form-control" id="R" placeholder="輸入1R幾U">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="R">R</label>
+                    <input type="text" class="form-control" id="R" placeholder="輸入1R幾U">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="Leverage">槓桿倍數</label>
+                    <label for="Leverage" id="margin">估算保證金：</label>
+                    <input type="text" class="form-control" id="Leverage" placeholder="輸入槓桿倍數">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="SL">SL</label>
-                <input type="text" class="form-control" id="SL" placeholder="輸入SL的%, 例:若停損為1.5%, 輸入1.5">
-            </div>
-            <div class="form-group">
-                <label for="TP">TP</label>
-                <input type="text" class="form-control" id="TP" placeholder="輸入TP的%, 例:若停利為4.5%, 輸入4.5">
-            </div>
-            <div class="form-group">
-                <label for="TP">槓桿倍數</label>
-                <input type="text" class="form-control" id="Leverage" placeholder="輸入槓桿倍數">
-            </div>
-            <div class="form-group">
-                <label for="nohup">是否使用nohup</label>
-                <input type="checkbox" id="nohup" value="true">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filename">Python檔名</label>
+                    <input type="text" class="form-control" id="filename" placeholder="輸入Python檔名">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="nohup">是否使用nohup</label>
+                    <input type="checkbox" id="nohup" value="true">
+                    <label for="iscont">是否為中斷重新執行</label>
+                    <input type="checkbox" id="iscont" value="false">
+                </div>
             </div>
             <button type="button" class="btn btn-primary" onclick="concatenateAndCopy()">產生命令並複製到剪貼簿</button>
         </form>
@@ -73,14 +96,54 @@
     </div>
 
     <script>
+        function initForm() {
+            // Read values from localStorage
+            const longValue = localStorage.getItem('SL_long');
+            const shortValue = localStorage.getItem('SL_short');
+            const RValue = localStorage.getItem('SL_R');
+            const SLValue = localStorage.getItem('SL_SL');
+            const TPValue = localStorage.getItem('SL_TP');
+            const nohupValue = localStorage.getItem('SL_nohup');
+            const LeverageValue = localStorage.getItem('SL_Leverage');
+            const filenameValue = localStorage.getItem('SL_filename');
+
+            // Set values in the form
+            if(longValue === null) {
+                document.getElementById('long').value = 'BTC';
+            } else {
+                document.getElementById('long').value = longValue;
+            }
+
+            if(shortValue === null) {
+                document.getElementById('short').value = 'ETH';
+            } else {
+                document.getElementById('short').value = shortValue;
+            }
+            
+            document.getElementById('R').value = RValue;
+            document.getElementById('SL').value = SLValue;
+            document.getElementById('TP').value = TPValue;
+            document.getElementById('nohup').checked = nohupValue === 'true';
+            document.getElementById('Leverage').value = LeverageValue;
+            if(filenameValue === null) {
+                document.getElementById('filename').value = 'SL.py';
+            } else {
+                document.getElementById('filename').value = filenameValue;
+            }
+        }
+
         function concatenateAndCopy() {
             const long = document.getElementById('long').value;
             const short = document.getElementById('short').value;
             const R = document.getElementById('R').value;
-            const SL = document.getElementById('SL').value;
+            var SL = document.getElementById('SL').value;
             const TP = document.getElementById('TP').value;
             const nohup = document.getElementById('nohup').checked;
             const Leverage = document.getElementById('Leverage').value;
+            const margin = document.getElementById('margin');
+            const filename = document.getElementById('filename').value;
+            const iscont = document.getElementById('iscont').checked;
+            const isSLMinus = document.getElementById('isSLMinus').value;
 
             if (long === short) {
                 alert('作多與作空標的不可相同');
@@ -97,25 +160,50 @@
                 return;
             }
 
-            if (nohup) {
-                const result = `nohup python3 SL.py -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} &`;
-                const resultInput = document.getElementById('result');
-                resultInput.value = result;
-
-                // Copy to clipboard
-                resultInput.select();
-                document.execCommand('copy');
-                return;
-            } else {
-                const result = `python3 SL.py -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage}`;
-                const resultInput = document.getElementById('result');
-                resultInput.value = result;
-
-                // Copy to clipboard
-                resultInput.select();
-                document.execCommand('copy');
+            if (filename === '') {
+                alert('請輸入Python檔名');
                 return;
             }
+
+
+            const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
+            margin.innerHTML = `估算保證金：${marginValue}U`;
+            // Store values in localStorage
+            localStorage.setItem('SL_long', long);
+            localStorage.setItem('SL_short', short);
+            localStorage.setItem('SL_R', R);
+            localStorage.setItem('SL_SL', SL);
+            localStorage.setItem('SL_TP', TP);
+            localStorage.setItem('SL_nohup', nohup);
+            localStorage.setItem('SL_Leverage', Leverage);
+            localStorage.setItem('SL_filename', filename);
+
+            if (isSLMinus === 'SL_Minus') {
+                SL = -SL;
+            }
+            
+            var result = '';
+            if (nohup) {
+                if(iscont) {
+                    result = `nohup python3 -u ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} -cont &`;
+                } else {
+                    result = `nohup python3 -u ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} &`;
+                }
+            } else {
+                if(iscont) {
+                    result = `python3 ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage} -cont`;
+                } else {
+                    result = `python3 ${filename} -long ${long} -short ${short} -R ${R} -SL ${SL} -TP ${TP} -L ${Leverage}`;    
+                }    
+            }
+
+            const resultInput = document.getElementById('result');
+            resultInput.value = result;
+            // Copy to clipboard
+            resultInput.select();
+            document.execCommand('copy');
+
+            return;
         }
     </script>
 </body>

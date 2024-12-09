@@ -32,7 +32,7 @@
 
             let dates = [...text.matchAll(datePattern)].map(match => match[1]);
             let uniqueDates = [...new Set(dates)]; // Remove duplicate dates
-            text = text.replaceAll('🗓'+uniqueDates, '\n').replaceAll('🔸', '\n');
+            text = text.replaceAll('🗓'+uniqueDates, '\n').replaceAll('🗓 '+uniqueDates, '\n').replaceAll('🔸', '\n');
             console.log("1:", text);
             let firstGroup = [...text.matchAll(firstPattern)].map(match => match[1]);
             console.log("2:", firstGroup)
@@ -40,7 +40,7 @@
             console.log("firstGroup:", firstGroup)
             let secondGroup = [...text.matchAll(secondPattern)].map(match => match[1]);
             console.log("3:", secondGroup)
-            var tmp = text.split('\n').slice(4);
+            var tmp = text.split('\n').slice(3);
             let otherGroup = [tmp[0] + ',' + tmp[1]];
             console.log("4:",otherGroup)
             
@@ -117,7 +117,7 @@
             download(filename, result);
         }
 
-        function download5Day() {
+        function download7Day() {
             var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
             storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
             var top7Data = storedData.slice(0, 7);
@@ -140,13 +140,13 @@
     </script>
     <body onload="refreshTable();">
         <div class="mb-3">
-            <label for="coinInputs3" class="form-label">直接轉換強勢族群 ver.20240620</label>
+            <label for="coinInputs3" class="form-label">直接轉換強勢族群 ver.20240919</label>
             <textarea class="form-control" id="coinInputs3" rows="7"></textarea>
         </div>
         <div class="mb-3">
             <button type="submit" class="btn btn-primary" onclick="copyToLocalStorage()">存入暫存區</button>
             <button type="submit" class="btn btn-primary" onclick="downloadLatestDay()">匯出最新一筆</button>
-            <button type="submit" class="btn btn-primary" onclick="download5Day()">匯出最近五筆</button>
+            <button type="submit" class="btn btn-primary" onclick="download7Day()">匯出最近七筆</button>
         </div>
         <div class="mt-5">
             <table class="table">
