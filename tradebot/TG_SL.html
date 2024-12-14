@@ -8,7 +8,7 @@
 </head>
 <body onload="initForm()">
     <div class="container mt-5">
-        <h2>多空新下單(ver:2024/12/07)</h2>
+        <h2>多空新下單(ver:2024/12/14)</h2>
         <form id="mainForm">
             <div class="form-row">
                 <div class="form-group col-md-6">
@@ -145,7 +145,7 @@
             const margin = document.getElementById('margin');
             const isSLMinus = document.getElementById('isSLMinus').value;
             let preserveR = document.getElementById('preserveR').value;
-            const saveR = document.getElementById('saveR').value;
+            let saveR = document.getElementById('saveR').value;
 
             if (long === short) {
                 alert('作多與作空標的不可相同');
