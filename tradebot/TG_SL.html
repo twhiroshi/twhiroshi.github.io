@@ -86,6 +86,7 @@
                 </div>
             </div>
             <button type="button" class="btn btn-primary" onclick="concatenateAndCopy()">送出下單資料</button>
+            <button type="button" class="btn btn-primary" onclick="cancelNewOrder()">取消下單</button>
         </form>
         <br/>
     </div>
@@ -210,6 +211,14 @@
             })
             
             return;
+        }
+
+        function cancelNewOrder() {
+            telegram.showConfirm("取消下單?", function(isOK){
+                if (isOK) {
+                    telegram.sendData("cancelNewOrder");
+                }
+            })
         }
     </script>
 </body>
