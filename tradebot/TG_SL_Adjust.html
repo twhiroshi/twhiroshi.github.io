@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>調整倉位數值(ver:2024/12/19)</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body onload="initForm()">
+    <div class="container mt-5">
+        <h2>調整倉位數值(ver:2024/12/19)</h2>
+        <form id="mainForm">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label id="long">作多</label>
+                </div>
+                <div class="form-group col-md-6">
+                    <label id="short">作空</label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="SL">SL (若停損為正數下面選單請選擇正)</label>
+                    <div class="form-inline">
+                        <select class="form-control" id="isSLMinus">
+                            <option value="SL_Minus" selected>負</option>
+                            <option value="SL_Plus">正</option>
+                        </select>
+                        <input type="text" class="form-control" id="SL" placeholder="輸入SL的%">
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="TP">TP</label>
+                    <input type="text" class="form-control" id="TP" placeholder="輸入TP的%">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="preserveR">自動保本條件(條件為R數, 0為不保本)</label>
+                    <input type="text" class="form-control" id="preserveR" placeholder="輸入自動保本條件(條件為R數, 0為不保本)">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="saveR">保本R數</label>
+                    <input type="text" class="form-control" id="saveR" placeholder="輸入保本R數">
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitAdjust()">更新資料</button>
+            <button type="button" class="btn btn-primary" onclick="cancelAdjust()">取消下單</button>
+        </form>
+        <br/>
+    </div>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const telegram = Telegram.WebApp;
+        telegram.ready();
+
+        function initForm() {
+            const queryString = window.location.search;
+            document.getElementById('long').innerHTML = queryString;
+        }
+
+        function submitAdjust() {
+            const long = document.getElementById('long').value;
+            const short = document.getElementById('short').value;
+            const R = document.getElementById('R').value;
+            var SL = document.getElementById('SL').value;
+            const TP = document.getElementById('TP').value;
+            const Leverage = document.getElementById('Leverage').value;
+            const margin = document.getElementById('margin');
+            const isSLMinus = document.getElementById('isSLMinus').value;
+            let preserveR = document.getElementById('preserveR').value;
+            let saveR = document.getElementById('saveR').value;
+
+            if (long === short) {
+                alert('作多與作空標的不可相同');
+                return;
+            }
+            
+            if (R === '' || SL === '' || TP === '' || Leverage === '' || preserveR === '') {
+                alert('請輸入R, SL, TP, 槓桿倍數, 自動保本條件');
+                return;
+            }
+
+            if (isNaN(R) || isNaN(SL) || isNaN(TP) || isNaN(Leverage) || isNaN(preserveR)) {
+                alert('R, SL, TP, 槓桿倍數, 自動保本條件必須為數字');
+                return;
+            }
+
+            if(preserveR < 0) {
+                alert('自動保本條件請輸入大於0的數字');
+                return;
+            } else if(preserveR === '0') {
+                saveR = 0;
+            } else if(preserveR > 0) {
+                if(saveR === '') {
+                    alert('請輸入保本R數');
+                    return;
+                } else if(isNaN(saveR)) {
+                    alert('保本R數必須為數字');
+                    return;
+                } else if(saveR <= 0) {
+                    alert('保本R數請輸入大於0的數字');
+                    return;
+                }
+            }
+
+            const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
+            margin.innerHTML = `估算保證金：${marginValue}U`;
+            // Store values in localStorage
+            localStorage.setItem('SL_long', long);
+            localStorage.setItem('SL_short', short);
+            localStorage.setItem('SL_R', R);
+            localStorage.setItem('SL_SL', SL);
+            localStorage.setItem('SL_TP', TP);
+            localStorage.setItem('SL_Leverage', Leverage);
+            localStorage.setItem('SL_preserveR', preserveR);
+            localStorage.setItem('SL_saveR', saveR);
+            
+            if (isSLMinus === 'SL_Minus') {
+                SL = -SL;
+            }
+            
+            var result = '';
+            result = 'long=' + long + '&short=' + short + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preserveR=' + preserveR + '&saveR=' + saveR;
+            var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + '%\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:' + preserveR + 'R\n保本R數:' + saveR + 'R';
+            if(preserveR === '-1') {
+                checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + '%\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:不保本';
+            }
+
+            telegram.showConfirm(checkResult, function(isOK){
+                if (isOK) {
+                    telegram.sendData(result);
+                }
+            })
+            
+            return;
+        }
+
+        function cancelNewOrder() {
+            telegram.showConfirm("取消下單?", function(isOK){
+                if (isOK) {
+                    telegram.sendData("cancelNewOrder");
+                }
+            })
+        }
+    </script>
+</body>
+</html>
