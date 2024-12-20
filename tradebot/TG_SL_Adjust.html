@@ -12,6 +12,11 @@
         <form id="mainForm">
             <div class="form-row">
                 <div class="form-group col-md-6">
+                    <label id="orderId"></label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
                     <label id="long">作多</label>
                 </div>
                 <div class="form-group col-md-6">
@@ -36,16 +41,16 @@
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="preserveR">自動保本條件(條件為R數, 0為不保本)</label>
-                    <input type="text" class="form-control" id="preserveR" placeholder="輸入自動保本條件(條件為R數, 0為不保本)">
+                    <label for="preservePercent">自動保本條件(條件為%數, 0為不保本)</label>
+                    <input type="text" class="form-control" id="preservePercent" placeholder="輸入自動保本條件(條件為R數, 0為不保本)">
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="saveR">保本R數</label>
-                    <input type="text" class="form-control" id="saveR" placeholder="輸入保本R數">
+                    <label for="savePercent">保本%數</label>
+                    <input type="text" class="form-control" id="savePercent" placeholder="輸入保本R數">
                 </div>
             </div>
             <button type="button" class="btn btn-primary" onclick="submitAdjust()">更新資料</button>
-            <button type="button" class="btn btn-primary" onclick="cancelAdjust()">取消下單</button>
+            <button type="button" class="btn btn-primary" onclick="cancelAdjust()">取消更新</button>
         </form>
         <br/>
     </div>
@@ -53,78 +58,73 @@
     <script>
         const telegram = Telegram.WebApp;
         telegram.ready();
-
+        id = '';
+        long = '';
+        short = '';
         function initForm() {
             const queryString = window.location.search;
-            document.getElementById('long').innerHTML = queryString;
+            const urlParams = new URLSearchParams(queryString);
+            document.getElementById('orderId').innerHTML = urlParams.get('id');
+            id = urlParams.get('id');
+            document.getElementById('long').innerHTML = '作多:' + urlParams.get('long');
+            long = urlParams.get('long');
+            document.getElementById('short').innerHTML = '作空:' + urlParams.get('short');
+            short = urlParams.get('short');
+            document.getElementById('SL').value = Math.abs(urlParams.get('sl'));
+            if(urlParams.get('sl') < 0) {
+                document.getElementById('isSLMinus').value = 'SL_Minus';
+            } else {
+                document.getElementById('isSLMinus').value = 'SL_Plus';
+            }
+            document.getElementById('TP').value = urlParams.get('tp');
+            document.getElementById('preservePercent').value = urlParams.get('preservePercent');
+            document.getElementById('savePercent').value = urlParams.get('savePercent');
         }
 
         function submitAdjust() {
-            const long = document.getElementById('long').value;
-            const short = document.getElementById('short').value;
-            const R = document.getElementById('R').value;
             var SL = document.getElementById('SL').value;
-            const TP = document.getElementById('TP').value;
-            const Leverage = document.getElementById('Leverage').value;
-            const margin = document.getElementById('margin');
             const isSLMinus = document.getElementById('isSLMinus').value;
-            let preserveR = document.getElementById('preserveR').value;
-            let saveR = document.getElementById('saveR').value;
+            const TP = document.getElementById('TP').value;
+            let preservePercent = parseFloat(document.getElementById('preservePercent').value);
+            let savePercent = parseFloat(document.getElementById('savePercent').value);
 
-            if (long === short) {
-                alert('作多與作空標的不可相同');
-                return;
-            }
-            
-            if (R === '' || SL === '' || TP === '' || Leverage === '' || preserveR === '') {
-                alert('請輸入R, SL, TP, 槓桿倍數, 自動保本條件');
+            if (SL === '' || TP === '' || preservePercent === '') {
+                alert('請輸入SL, TP, 自動保本條件');
                 return;
             }
 
-            if (isNaN(R) || isNaN(SL) || isNaN(TP) || isNaN(Leverage) || isNaN(preserveR)) {
-                alert('R, SL, TP, 槓桿倍數, 自動保本條件必須為數字');
+            if (isNaN(SL) || isNaN(TP) || isNaN(preservePercent)) {
+                alert('SL, TP, 自動保本條件必須為數字');
                 return;
             }
 
-            if(preserveR < 0) {
+            if(preservePercent < 0) {
                 alert('自動保本條件請輸入大於0的數字');
                 return;
-            } else if(preserveR === '0') {
-                saveR = 0;
-            } else if(preserveR > 0) {
-                if(saveR === '') {
-                    alert('請輸入保本R數');
+            } else if(preservePercent === '0' || preservePercent === 0) {
+                savePercent = 0;
+            } else if(preservePercent > 0) {
+                if(savePercent === '') {
+                    alert('請輸入保本%數');
                     return;
-                } else if(isNaN(saveR)) {
-                    alert('保本R數必須為數字');
+                } else if(isNaN(savePercent)) {
+                    alert('保本%數必須為數字');
                     return;
-                } else if(saveR <= 0) {
-                    alert('保本R數請輸入大於0的數字');
+                } else if(savePercent <= 0) {
+                    alert('保本%數請輸入大於0的數字');
                     return;
                 }
             }
-
-            const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
-            margin.innerHTML = `估算保證金：${marginValue}U`;
-            // Store values in localStorage
-            localStorage.setItem('SL_long', long);
-            localStorage.setItem('SL_short', short);
-            localStorage.setItem('SL_R', R);
-            localStorage.setItem('SL_SL', SL);
-            localStorage.setItem('SL_TP', TP);
-            localStorage.setItem('SL_Leverage', Leverage);
-            localStorage.setItem('SL_preserveR', preserveR);
-            localStorage.setItem('SL_saveR', saveR);
             
             if (isSLMinus === 'SL_Minus') {
                 SL = -SL;
             }
             
             var result = '';
-            result = 'long=' + long + '&short=' + short + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preserveR=' + preserveR + '&saveR=' + saveR;
-            var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + '%\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:' + preserveR + 'R\n保本R數:' + saveR + 'R';
-            if(preserveR === '-1') {
-                checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + '%\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:不保本';
+            result = 'id=' + id + '&SL=' + SL + '&TP=' + TP + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent;
+            var checkResult = '請確認修改參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\n自動保本條件:' + preservePercent + '%\n保本%數:' + savePercent + '%';
+            if(preservePercent === '0' || preservePercent === 0) {
+                checkResult = '請確認修改參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\n自動保本條件:不保本';
             }
 
             telegram.showConfirm(checkResult, function(isOK){
@@ -136,10 +136,10 @@
             return;
         }
 
-        function cancelNewOrder() {
-            telegram.showConfirm("取消下單?", function(isOK){
+        function cancelAdjust() {
+            telegram.showConfirm("取消更新?", function(isOK){
                 if (isOK) {
-                    telegram.sendData("cancelNewOrder");
+                    telegram.sendData("cancelAdjustOrder");
                 }
             })
         }
