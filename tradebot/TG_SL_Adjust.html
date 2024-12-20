@@ -50,6 +50,7 @@
                 </div>
             </div>
             <button type="button" class="btn btn-primary" onclick="submitAdjust()">更新資料</button>
+            <button type="button" class="btn btn-primary" onclick="closeOrder()">手動平倉</button>
             <button type="button" class="btn btn-primary" onclick="cancelAdjust()">取消更新</button>
         </form>
         <br/>
@@ -134,6 +135,14 @@
             })
             
             return;
+        }
+
+        function closeOrder() {
+            telegram.showConfirm("確定手動平倉?", function(isOK){
+                if (isOK) {
+                    telegram.sendData("closeOrder=" + id);
+                }
+            })
         }
 
         function cancelAdjust() {
