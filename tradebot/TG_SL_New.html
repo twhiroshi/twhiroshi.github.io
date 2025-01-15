@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多空新下單(ver:20241222_1)</title>
+    <title>多空新下單(ver:20250115_1)</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body onload="initForm()">
     <div class="container mt-5">
-        <h2>多空新下單(ver:20241222_1)</h2>
+        <h2>多空新下單(ver:20250115_1)</h2>
         <form id="mainForm">
             <div class="form-row">
                 <div class="form-group col-md-6">
@@ -28,6 +28,7 @@
                         <option value="LTC">LTC</option>
                         <option value="DOGE">DOGE</option>
                     </select>
+                    <input type="text" class="form-control" id="long_list" placeholder="手動輸入作多Pool列表">
                 </div>
                 <div class="form-group col-md-6">
                     <label for="short">作空</label>
@@ -46,6 +47,7 @@
                         <option value="LTC">LTC</option>
                         <option value="DOGE">DOGE</option>
                     </select>
+                    <input type="text" class="form-control" id="short_list" placeholder="手動輸入作空Pool列表">
                 </div>
             </div>
             <div class="form-row">
@@ -94,7 +96,54 @@
     <script>
         const telegram = Telegram.WebApp;
         telegram.ready();
+        document.getElementById('long_list').onchange = function() {
+            const listValue = this.value.replace(/\s/g, '');
+            const selectElement = document.getElementById('long');
+            if (listValue) {
+                l = listValue.split(',');
+                selectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    selectElement.add(option);
+                    selectElement.value = l[i];
+                };
+            } else {
+                defaultCoins = ['BTC', 'ETH', 'ETC', 'ATOM', 'POL', 'ADA', 'AVAX', 'DOT', 'BNB', 'SOL', 'XRP', 'LTC', 'DOGE'];
+                selectElement.innerHTML = '';
+                for (i = 0; i < defaultCoins.length; i++) {
+                    const option = new Option(defaultCoins[i], defaultCoins[i]);
+                    selectElement.add(option);
+                };
+                selectElement.value = 'BTC';
+            }
 
+            localStorage.setItem('SL_long_list', listValue);
+        };
+
+        document.getElementById('short_list').onchange = function() {
+            const listValue = this.value.replace(/\s/g, '');
+            const selectElement = document.getElementById('short');
+            if (listValue) {
+                l = listValue.split(',');
+                selectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    selectElement.add(option);
+                    selectElement.value = l[i];
+                };
+            } else {
+                defaultCoins = ['BTC', 'ETH', 'ETC', 'ATOM', 'POL', 'ADA', 'AVAX', 'DOT', 'BNB', 'SOL', 'XRP', 'LTC', 'DOGE'];
+                selectElement.innerHTML = '';
+                for (i = 0; i < defaultCoins.length; i++) {
+                    const option = new Option(defaultCoins[i], defaultCoins[i]);
+                    selectElement.add(option);
+                };
+                selectElement.value = 'ETH';
+            }
+
+            localStorage.setItem('SL_short_list', listValue);
+        };
+        
         function initForm() {
             // Read values from localStorage
             const longValue = localStorage.getItem('SL_long');
@@ -105,6 +154,31 @@
             const LeverageValue = localStorage.getItem('SL_Leverage');
             const preservePercentValue = localStorage.getItem('SL_preservePercent');
             const savePercentValue = localStorage.getItem('SL_savePercent');
+            const longListValue = localStorage.getItem('SL_long_list');
+            const shortListValue = localStorage.getItem('SL_short_list');
+
+            if (longListValue) {
+                document.getElementById('long_list').value = longListValue;
+                const l = longListValue.split(',');
+                const longSelectElement = document.getElementById('long');
+                longSelectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    longSelectElement.add(option);
+                };
+            }
+
+            if (shortListValue) {
+                document.getElementById('short_list').value = shortListValue;
+                const l = shortListValue.split(',');
+                const shortSelectElement = document.getElementById('short');
+                shortSelectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    shortSelectElement.add(option);
+                };
+            }
+
 
             // Set values in the form
             if(longValue === null) {
@@ -113,10 +187,23 @@
                 document.getElementById('long').value = longValue;
             }
 
+            if (longValue && document.getElementById('long').querySelector(`option[value="${longValue}"]`)) {
+                document.getElementById('long').value = longValue;
+            } else {
+                document.getElementById('long').selectedIndex = 0;
+            }
+
+
             if(shortValue === null) {
                 document.getElementById('short').value = 'ETH';
             } else {
                 document.getElementById('short').value = shortValue;
+            }
+
+            if (shortValue && document.getElementById('short').querySelector(`option[value="${shortValue}"]`)) {
+                document.getElementById('short').value = shortValue;
+            } else {
+                document.getElementById('short').selectedIndex = 0;
             }
             
             document.getElementById('R').value = RValue;
@@ -199,9 +286,9 @@
             
             var result = '';
             result = 'long=' + long + '&short=' + short + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent;
-            var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + '%\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:' + preservePercent + '%\n保本%數:' + savePercent + '%';
+            var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + ' U\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:' + preservePercent + '%\n保本%數:' + savePercent + '%';
             if(preservePercent === '0' || preservePercent === 0) {
-                checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + '%\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:不保本';
+                checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\nSL:' + SL + '%\nTP:' + TP + '\nR:' + R + ' U\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n' + '自動保本條件:不保本';
             }
 
             telegram.showConfirm(checkResult, function(isOK){
