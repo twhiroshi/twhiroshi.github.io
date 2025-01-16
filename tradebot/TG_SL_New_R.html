@@ -109,8 +109,8 @@
             </div>
             <div class="form-row" id="trailingInputs" style="display:none">
                 <div class="form-group col-md-6">
-                    <label for="trailingCondition">移動停損條件(條件為R數, 0為不啟動移動停損)</label>
-                    <input type="text" class="form-control" id="trailingCondition" placeholder="輸入移動停損條件(條件為R數, 0為不啟動移動停損)">
+                    <label for="trailingCondition">移動停損啟動條件(條件為R數, 0為不啟動移動停損)</label>
+                    <input type="text" class="form-control" id="trailingCondition" placeholder="輸入移動停損啟動條件(條件為R數, 0為不啟動移動停損)">
                 </div>
                 <div class="form-group col-md-6">
                     <label for="trailingAmount">回吐移動R數</label>
@@ -316,7 +316,7 @@
 
             if (preserveType === 'trailing') {
                 if (trailingCondition === '') {
-                    alert('請輸入移動停損條件');
+                    alert('請輸入移動停損啟動條件');
                     return;
                 }
                 if (trailingAmount === '') {
@@ -324,11 +324,11 @@
                     return;
                 }
                 if (isNaN(trailingCondition) || isNaN(trailingAmount)) {
-                    alert('移動停損條件和回吐移動R數必須為數字');
+                    alert('移動停損啟動條件和回吐移動R數必須為數字');
                     return;
                 }
                 if (trailingCondition <= 0 || trailingAmount <= 0) {
-                    alert('移動停損條件和回吐移動R數必須為大於0的數字');
+                    alert('移動停損啟動條件和回吐移動R數必須為大於0的數字');
                     return;
                 }
                 
