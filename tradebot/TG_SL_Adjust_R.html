@@ -86,6 +86,16 @@
     </div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
+        document.addEventListener('click', (event) => {
+            const tags = ['INPUT', 'TEXTAREA']
+            const focused = document.activeElement
+            console.log(focused.tagName)
+
+            if (focused && focused !== event.target && tags.includes(focused.tagName)) {
+                focused.blur()
+            }
+        })
+        
         const telegram = Telegram.WebApp;
         telegram.ready();
         id = '';
