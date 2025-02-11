@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多空新下單(ver:20250120_1)</title>
+    <title>多空新下單(ver:2025021101)</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body onload="initForm()">
     <div class="container mt-5">
-        <h2>多空新下單(ver:20250120_1)</h2>
+        <h2>多空新下單(ver:2025021101)</h2>
         <form id="mainForm">
             <div class="form-row">
                 <div class="form-group col-md-6">
@@ -411,7 +411,7 @@
             if (preserveType === 'preserve') {
                 checkResult += '自動保本條件:' + preservePercent + '%(' + orig_preservePercent + 'R)\n保本%數:' + savePercent + '%(' + orig_savePercent + 'R)';
             } else if (preserveType === 'trailing') {
-                checkResult += '移動停損條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
+                checkResult += '移動停損啟動條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
             } else {
                 checkResult += '不啟用保本/移動停損';
             }
