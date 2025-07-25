@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATR命令產生器(2024/09/20)</title>
+    <title>ATR命令產生器(2025/07/23)</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body onload="initForm()">
     <div class="container mt-5">
-        <h2>ATR命令產生器(2024/09/20)</h2>
+        <h2>ATR命令產生器(2025/07/23)</h2>
         <form id="mainForm">
             <div class="form-row">
                 <div class="form-group col-md-6">
@@ -53,7 +53,6 @@
                     <input type="text" class="form-control" id="ATR" placeholder="">
                 </div>
             </div>
-
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="filename">Python檔名</label>
@@ -62,6 +61,12 @@
                 <div class="form-group col-md-6">
                     <label for="nohup">是否使用nohup</label>
                     <input type="checkbox" id="nohup" value="true">
+                    <br>
+                    <label for="stopraise">是否停止加碼</label>
+                    <input type="checkbox" id="stopraise" value="true">
+                    <br>
+                    <label for="closeall">是否平倉所有數量</label>
+                    <input type="checkbox" id="closeall" value="true">
                 </div>
             </div>
             <button type="button" class="btn btn-primary" onclick="concatenateAndCopy()">產生命令並複製到剪貼簿</button>
@@ -109,6 +114,8 @@
             const ATR = document.getElementById('ATR').value;
             const filename = document.getElementById('filename').value;
             const nohup = document.getElementById('nohup').checked;
+            const stopraise = document.getElementById('stopraise').checked;
+            const closeall = document.getElementById('closeall').checked;
 
             if (coin === '' || R === '' || Quantity === '' || op === '' || sp === '' || ATR === '' || filename === '') {
                 alert('請輸入所有欄位');
@@ -120,13 +127,27 @@
             localStorage.setItem('ATR_filename', filename);
             localStorage.setItem('ATR_atr', ATR);
             
-
             // Concatenate the command
             var result = ''
             if (nohup) {
-                result = `nohup python3 -u ${filename} -coin ${coin} -period ${period} -r ${R} -q ${Quantity} -op ${op} -sp ${sp} -atr ${ATR} &`;
+                result = `nohup python3 -u ${filename} -coin ${coin} -period ${period} -r ${R} -q ${Quantity} -op ${op} -sp ${sp} -atr ${ATR}`;
+                if(closeall) {
+                    result += ' -closeall';
+                }
+
+                if(stopraise) {
+                    result += ' -stopraise';
+                }
+                result += ' &';                    
             } else {
                 result = `python3 -u ${filename} -coin ${coin} -period ${period} -r ${R} -q ${Quantity} -op ${op} -sp ${sp} -atr ${ATR}`;
+                if(closeall) {
+                    result += ' -closeall';
+                }
+
+                if(stopraise) {
+                    result += ' -stopraise';
+                }
             }
 
             const resultInput = document.getElementById('result');
