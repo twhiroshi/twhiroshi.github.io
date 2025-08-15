@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多空-掛價下單(ver:2025081501)</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body onload="initForm()">
+    <div class="container mt-5">
+        <h2>多空-掛價下單(ver:2025081501)</h2>
+        <form id="mainForm">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="long">作多</label>
+                    <select class="form-control" id="long">
+                        <option value="BTC" selected>BTC</option>
+                        <option value="ETH">ETH</option>
+                        <option value="ETC">ETC</option>
+                        <option value="ATOM">ATOM</option>
+                        <option value="POL">POL</option>
+                        <option value="ADA">ADA</option>
+                        <option value="AVAX">AVAX</option>
+                        <option value="DOT">DOT</option>
+                        <option value="BNB">BNB</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                        <option value="LTC">LTC</option>
+                        <option value="DOGE">DOGE</option>
+                    </select>
+                    <input type="text" class="form-control" id="long_list" placeholder="手動輸入作多Pool列表">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="short">作空</label>
+                    <select class="form-control" id="short">
+                        <option value="BTC">BTC</option>
+                        <option value="ETH" selected>ETH</option>
+                        <option value="ETC">ETC</option>
+                        <option value="ATOM">ATOM</option>
+                        <option value="POL">POL</option>
+                        <option value="ADA">ADA</option>
+                        <option value="AVAX">AVAX</option>
+                        <option value="DOT">DOT</option>
+                        <option value="BNB">BNB</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                        <option value="LTC">LTC</option>
+                        <option value="DOGE">DOGE</option>
+                    </select>
+                    <input type="text" class="form-control" id="short_list" placeholder="手動輸入作空Pool列表">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="RPercent">掛單價格</label>
+                    <input type="text" class="form-control" id="limitOrderPrice" placeholder="輸入掛單價格">
+                    <br/>
+                    <button type="button" class="btn btn-primary" onclick="getCurrentPrice()">取得目前價格</button>
+                </div>
+                <div class="form-group col-md-6">    
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="RPercent">1R幾%</label>
+                    <input type="text" class="form-control" id="RPercent" placeholder="輸入1R幾%">
+                </div>
+                <div class="form-group col-md-6">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="SL">SL (若停損為正數下面選單請選擇正)(單位為R)</label>
+                    <div class="form-inline">
+                        <select class="form-control" id="isSLMinus">
+                            <option value="SL_Minus" selected>負</option>
+                            <option value="SL_Plus">正</option>
+                        </select>
+                        <input type="text" class="form-control" id="SL" placeholder="輸入SL的R">
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="TP">TP(單位為R)</label>
+                    <input type="text" class="form-control" id="TP" placeholder="輸入TP的R">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="R">下單金額(單位為U)</label>
+                    <input type="text" class="form-control" id="R" placeholder="輸入下單金額">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="Leverage">槓桿倍數</label>
+                    <label for="Leverage" id="margin">估算保證金：</label>
+                    <input type="text" class="form-control" id="Leverage" placeholder="輸入槓桿倍數">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="preserveType">保本/移動停損</label>
+                    <select class="form-control" id="preserveType" onchange="toggleInputs()">
+                        <option value="preserve" selected>保本</option>
+                        <option value="trailing">移動停損</option>
+                        <option value="none">不啟用</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                </div>
+            </div>
+            <div class="form-row" id="preserveInputs">
+                <div class="form-group col-md-6">
+                    <label for="preservePercent">自動保本條件(條件為R數, 請輸入大於0之數字)</label>
+                    <input type="text" class="form-control" id="preservePercent" placeholder="輸入自動保本條件(條件為R數, 0為不啟動自動保本)">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="savePercent">保本R數</label>
+                    <input type="text" class="form-control" id="savePercent" placeholder="輸入保本R數">
+                </div>
+            </div>
+            <div class="form-row" id="trailingInputs" style="display:none">
+                <div class="form-group col-md-6">
+                    <label for="trailingCondition">移動停損啟動條件(條件為R數, 請輸入大於0之數字)</label>
+                    <input type="text" class="form-control" id="trailingCondition" placeholder="輸入移動停損啟動條件(條件為R數, 0為不啟動移動停損)">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="trailingAmount">回吐移動R數</label>
+                    <input type="text" class="form-control" id="trailingAmount" placeholder="輸入移動R數">
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="concatenateAndCopy()">送出下單資料</button>
+            <button type="button" class="btn btn-primary" onclick="cancelPreOrder()">取消下單</button>
+        </form>
+        <br/>
+    </div>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        document.addEventListener('click', (event) => {
+            const tags = ['INPUT', 'TEXTAREA']
+            const focused = document.activeElement
+            // console.log(focused.tagName)
+
+            if (focused && focused !== event.target && tags.includes(focused.tagName)) {
+                focused.blur()
+            }
+        })
+        
+        const telegram = Telegram.WebApp;
+        telegram.ready();
+        document.getElementById('long_list').onchange = function() {
+            const listValue = this.value.replace(/\s/g, '');
+            const selectElement = document.getElementById('long');
+            if (listValue) {
+                l = listValue.split(',');
+                selectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    selectElement.add(option);
+                    selectElement.value = l[i];
+                };
+            } else {
+                defaultCoins = ['BTC', 'ETH', 'ETC', 'ATOM', 'POL', 'ADA', 'AVAX', 'DOT', 'BNB', 'SOL', 'XRP', 'LTC', 'DOGE'];
+                selectElement.innerHTML = '';
+                for (i = 0; i < defaultCoins.length; i++) {
+                    const option = new Option(defaultCoins[i], defaultCoins[i]);
+                    selectElement.add(option);
+                };
+                selectElement.value = 'BTC';
+            }
+
+            localStorage.setItem('SL_long_list', listValue);
+        };
+
+        document.getElementById('short_list').onchange = function() {
+            const listValue = this.value.replace(/\s/g, '');
+            const selectElement = document.getElementById('short');
+            if (listValue) {
+                l = listValue.split(',');
+                selectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    selectElement.add(option);
+                    selectElement.value = l[i];
+                };
+            } else {
+                defaultCoins = ['BTC', 'ETH', 'ETC', 'ATOM', 'POL', 'ADA', 'AVAX', 'DOT', 'BNB', 'SOL', 'XRP', 'LTC', 'DOGE'];
+                selectElement.innerHTML = '';
+                for (i = 0; i < defaultCoins.length; i++) {
+                    const option = new Option(defaultCoins[i], defaultCoins[i]);
+                    selectElement.add(option);
+                };
+                selectElement.value = 'ETH';
+            }
+
+            localStorage.setItem('SL_short_list', listValue);
+        };
+
+        function toggleInputs() {
+            const type = document.getElementById('preserveType').value;
+            document.getElementById('preserveInputs').style.display = type === 'preserve' ? 'flex' : 'none';
+            document.getElementById('trailingInputs').style.display = type === 'trailing' ? 'flex' : 'none';
+        }
+        
+        function initForm() {
+            // Read values from localStorage
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            
+            let longValue = localStorage.getItem('SL_long');
+            let shortValue = localStorage.getItem('SL_short');
+            let limitOrderPrice = 0;
+            if (urlParams.size > 0) {
+                longParams = urlParams.get('long').split('/');
+                shortParams = urlParams.get('short').split('/');
+                longValue = longParams[0];
+                shortValue = shortParams[0];
+                longPrice = longParams[1];
+                shortPrice = shortParams[1];
+                limitOrderPrice = longPrice / shortPrice;
+                if (limitOrderPrice < 1) {
+                    const decimals = -Math.floor(Math.log10(limitOrderPrice));
+                    document.getElementById('limitOrderPrice').value = limitOrderPrice.toFixed(decimals + 4);
+                } else {
+                    document.getElementById('limitOrderPrice').value = limitOrderPrice.toFixed(4);
+                }
+                console.log(longValue, shortValue, longPrice, shortPrice);
+            }
+            
+            const RValue = localStorage.getItem('SL_R');
+            const RPercentValue = localStorage.getItem('SL_RPercent');
+            const SLValue = localStorage.getItem('SL_SL');
+            const TPValue = localStorage.getItem('SL_TP');
+            const LeverageValue = localStorage.getItem('SL_Leverage');
+            const preservePercentValue = localStorage.getItem('SL_preservePercent');
+            const savePercentValue = localStorage.getItem('SL_savePercent');
+            const longListValue = localStorage.getItem('SL_long_list');
+            const shortListValue = localStorage.getItem('SL_short_list');
+            const preserveTypeValue = localStorage.getItem('SL_preserveType');
+            const trailingConditionValue = localStorage.getItem('SL_trailingCondition');
+            const trailingAmountValue = localStorage.getItem('SL_trailingAmount');
+
+            if (longListValue) {
+                document.getElementById('long_list').value = longListValue;
+                const l = longListValue.split(',');
+                const longSelectElement = document.getElementById('long');
+                longSelectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    longSelectElement.add(option);
+                };
+            }
+
+            if (shortListValue) {
+                document.getElementById('short_list').value = shortListValue;
+                const l = shortListValue.split(',');
+                const shortSelectElement = document.getElementById('short');
+                shortSelectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    shortSelectElement.add(option);
+                };
+            }
+
+            // Set values in the form
+            if(longValue === null) {
+                document.getElementById('long').value = 'BTC';
+            } else {
+                document.getElementById('long').value = longValue;
+            }
+
+            if (longValue && document.getElementById('long').querySelector(`option[value="${longValue}"]`)) {
+                document.getElementById('long').value = longValue;
+            } else {
+                document.getElementById('long').selectedIndex = 0;
+            }
+
+
+            if(shortValue === null) {
+                document.getElementById('short').value = 'ETH';
+            } else {
+                document.getElementById('short').value = shortValue;
+            }
+
+            if (shortValue && document.getElementById('short').querySelector(`option[value="${shortValue}"]`)) {
+                document.getElementById('short').value = shortValue;
+            } else {
+                document.getElementById('short').selectedIndex = 0;
+            }
+            
+            document.getElementById('R').value = RValue;
+            document.getElementById('SL').value = SLValue;
+            document.getElementById('TP').value = TPValue;
+            document.getElementById('RPercent').value = RPercentValue;
+            document.getElementById('Leverage').value = LeverageValue;
+            if(preservePercentValue === null) {
+                document.getElementById('preservePercent').value = '0';
+            } else {
+                document.getElementById('preservePercent').value = preservePercentValue;
+            }
+
+            if(savePercentValue === null) {
+                document.getElementById('savePercent').value = '0';
+            } else {
+                document.getElementById('savePercent').value = savePercentValue;
+            }
+
+            if(preserveTypeValue === null) {
+                document.getElementById('preserveType').value = 'preserve';
+            } else {
+                document.getElementById('preserveType').value = preserveTypeValue;
+            }
+
+            if(trailingConditionValue === null) {
+                document.getElementById('trailingCondition').value = '0';
+            } else {
+                document.getElementById('trailingCondition').value = trailingConditionValue;
+            }
+
+            if(trailingAmountValue === null) {
+                document.getElementById('trailingAmount').value = '0';
+            } else {
+                document.getElementById('trailingAmount').value = trailingAmountValue;
+            }
+            toggleInputs();
+        }
+
+        function concatenateAndCopy() {
+            const long = document.getElementById('long').value;
+            const short = document.getElementById('short').value;
+            const R = document.getElementById('R').value;
+            const RPercent = document.getElementById('RPercent').value;
+            var SL = document.getElementById('SL').value;
+            let TP = document.getElementById('TP').value;
+            const Leverage = document.getElementById('Leverage').value;
+            const margin = document.getElementById('margin');
+            const isSLMinus = document.getElementById('isSLMinus').value;
+            let preservePercent = document.getElementById('preservePercent').value;
+            let savePercent = document.getElementById('savePercent').value;
+            const preserveType = document.getElementById('preserveType').value;
+            let trailingCondition = document.getElementById('trailingCondition').value;
+            let trailingAmount = document.getElementById('trailingAmount').value;
+            let limitOrderPrice = document.getElementById('limitOrderPrice').value;
+
+            if (long === short) {
+                alert('作多與作空標的不可相同');
+                return;
+            }
+            
+            if (R === '' || SL === '' || TP === '' || Leverage === '' || RPercent === '' || limitOrderPrice === '') {
+                alert('請輸入1R幾%, 下單金額, 掛單價格, SL, TP, 槓桿倍數');
+                return;
+            }
+
+            if (isNaN(R) || isNaN(SL) || isNaN(TP) || isNaN(Leverage) || isNaN(RPercent) || isNaN(limitOrderPrice)) {
+                alert('1R幾%, 下單金額, 掛單價格, SL, TP, 槓桿倍數, 自動保本條件必須為數字');
+                return;
+            }
+
+            if (preserveType === 'trailing') {
+                if (trailingCondition === '') {
+                    alert('請輸入移動停損啟動條件');
+                    return;
+                }
+                if (trailingAmount === '') {
+                    alert('請輸入回吐移動R數');
+                    return;
+                }
+                if (isNaN(trailingCondition) || isNaN(trailingAmount)) {
+                    alert('移動停損啟動條件和回吐移動R數必須為數字');
+                    return;
+                }
+                if (trailingCondition <= 0 || trailingAmount <= 0) {
+                    alert('移動停損啟動條件和回吐移動R數必須為大於0的數字');
+                    return;
+                }
+                
+            } else if(preserveType === 'preserve') {
+                if (preservePercent === '') {
+                    alert('請輸入自動保本條件');
+                    return;
+                }
+                if (savePercent === '') {
+                    alert('請輸入保本R數');
+                    return;
+                }
+                if (isNaN(preservePercent) || isNaN(savePercent)) {
+                    alert('自動保本條件和保本R數必須為數字');
+                    return;
+                }
+                if (preservePercent <= 0 || savePercent <= 0) {
+                    alert('自動保本條件和保本R數必須為大於0的數字');
+                    return;
+                }
+            }
+
+            const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
+            margin.innerHTML = `估算保證金：${marginValue}U`;
+            // Store values in localStorage
+            localStorage.setItem('SL_long', long);
+            localStorage.setItem('SL_short', short);
+            localStorage.setItem('SL_R', R);
+            localStorage.setItem('SL_RPercent', RPercent);
+            localStorage.setItem('SL_SL', SL);
+            localStorage.setItem('SL_TP', TP);
+            localStorage.setItem('SL_Leverage', Leverage);
+            localStorage.setItem('SL_preservePercent', preservePercent);
+            localStorage.setItem('SL_savePercent', savePercent);
+            localStorage.setItem('SL_preserveType', preserveType);
+            localStorage.setItem('SL_trailingCondition', trailingCondition);
+            localStorage.setItem('SL_trailingAmount', trailingAmount);
+            
+            if (isSLMinus === 'SL_Minus') {
+                SL = -SL;
+            }
+            const orig_TP = TP;
+            const orig_SL = SL;
+            const orig_preservePercent = preservePercent;
+            const orig_savePercent = savePercent;
+            const orig_trailingCondition = trailingCondition;
+            const orig_trailingAmount = trailingAmount;
+
+            SL = Number((SL * RPercent).toFixed(3));
+            TP = Number(Math.abs(TP * RPercent).toFixed(3));
+            if (preserveType === 'preserve') {
+                trailingCondition = 0;
+                trailingAmount = 0;
+                preservePercent = Number(Math.abs(preservePercent * RPercent).toFixed(3));
+                savePercent = Number(Math.abs(savePercent * RPercent).toFixed(3));
+            } else if (preserveType === 'trailing') {
+                preservePercent = 0;
+                savePercent = 0;
+                trailingCondition = Number(Math.abs(trailingCondition * RPercent).toFixed(3));
+                trailingAmount = Number(Math.abs(trailingAmount * RPercent).toFixed(3));
+            } else {
+                preservePercent = 0;
+                savePercent = 0;
+                trailingCondition = 0;
+                trailingAmount = 0;
+            }
+            var result = '';
+            result = 'action=order&long=' + long + '&short=' + short + '&RPercent=' + RPercent + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent + '&trailingCondition=' + trailingCondition + '&trailingAmount=' + trailingAmount + '&limitOrderPrice=' + limitOrderPrice;
+            var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\n掛單價格:' + limitOrderPrice +'\n1R幾%:'+ RPercent + '%\nSL:' + SL + '%('+ orig_SL + 'R)\nTP:' + TP + '%(' + orig_TP +'R)\n下單金額:' + R + ' U\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n';
+            if (preserveType === 'preserve') {
+                checkResult += '自動保本條件:' + preservePercent + '%(' + orig_preservePercent + 'R)\n保本%數:' + savePercent + '%(' + orig_savePercent + 'R)';
+            } else if (preserveType === 'trailing') {
+                checkResult += '移動停損啟動條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
+            } else {
+                checkResult += '不啟用保本/移動停損';
+            }
+ 
+            telegram.showConfirm(checkResult, function(isOK){
+                if (isOK) {
+                    telegram.sendData(result);
+                }
+            })
+            
+            return;
+        }
+
+        function cancelPreOrder() {
+            telegram.showConfirm("取消下單?", function(isOK){
+                if (isOK) {
+                    telegram.sendData("cancelPreOrder");
+                }
+            })
+        }
+
+        function getCurrentPrice() {
+            const long = document.getElementById('long').value;
+            const short = document.getElementById('short').value;
+            const result = 'action=getPrice&long=' + long + '&short=' + short;
+            telegram.showConfirm("取得 " + long + "/" + short + " 價格?", function(isOK){
+                if (isOK) {
+                    telegram.sendData(result);
+                }
+            })
+        }
+    </script>
+</body>
+</html>
