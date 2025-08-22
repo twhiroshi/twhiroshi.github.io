@@ -302,6 +302,9 @@
                 return;
             }
 
+            // 在提交前保存表單狀態
+            saveFormState();
+
             const formData = {
                 symbol: document.getElementById('symbol').value.trim().toUpperCase(),
                 period: document.getElementById('period').value,
@@ -331,8 +334,13 @@
         // 自動儲存表單狀態
         function saveFormState() {
             const formData = {
+                symbol: document.getElementById('symbol').value,
                 period: document.getElementById('period').value,
+                direction: document.getElementById('direction').value,
                 R: document.getElementById('R').value,
+                priceType: document.getElementById('priceType').value,
+                orderPrice: document.getElementById('orderPrice').value,
+                stopLossPrice: document.getElementById('stopLossPrice').value,
                 adjustATR: document.getElementById('adjustATR').value,
                 leverage: document.getElementById('leverage').value,
                 enableScaling: document.getElementById('enableScaling').checked
@@ -344,11 +352,20 @@
             const saved = localStorage.getItem('singleOrderForm');
             if (saved) {
                 const formData = JSON.parse(saved);
+                document.getElementById('symbol').value = formData.symbol || '';
                 document.getElementById('period').value = formData.period || '1h';
+                document.getElementById('direction').value = formData.direction || '';
                 document.getElementById('R').value = formData.R || '';
+                document.getElementById('priceType').value = formData.priceType || '';
+                document.getElementById('orderPrice').value = formData.orderPrice || '';
+                document.getElementById('stopLossPrice').value = formData.stopLossPrice || '';
                 document.getElementById('adjustATR').value = formData.adjustATR || '2.0';
                 document.getElementById('leverage').value = formData.leverage || '10';
                 document.getElementById('enableScaling').checked = formData.enableScaling || false;
+                
+                // 觸發相關的更新邏輯
+                togglePriceInput();
+                updateValidationInfo();
             }
         }
 
