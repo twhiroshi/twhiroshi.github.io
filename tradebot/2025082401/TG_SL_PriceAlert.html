@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多空-到價通知</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body onload="initForm()">
+    <div class="container mt-5">
+        <h2>多空-到價通知(ver:2025082401)</h2>
+        <form id="mainForm">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="long">作多</label>
+                    <select class="form-control" id="long">
+                        <option value="BTC" selected>BTC</option>
+                        <option value="ETH">ETH</option>
+                        <option value="ETC">ETC</option>
+                        <option value="ATOM">ATOM</option>
+                        <option value="POL">POL</option>
+                        <option value="ADA">ADA</option>
+                        <option value="AVAX">AVAX</option>
+                        <option value="DOT">DOT</option>
+                        <option value="BNB">BNB</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                        <option value="LTC">LTC</option>
+                        <option value="DOGE">DOGE</option>
+                    </select>
+                    <input type="text" class="form-control" id="long_list" placeholder="手動輸入作多Pool列表">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="short">作空</label>
+                    <select class="form-control" id="short">
+                        <option value="BTC">BTC</option>
+                        <option value="ETH" selected>ETH</option>
+                        <option value="ETC">ETC</option>
+                        <option value="ATOM">ATOM</option>
+                        <option value="POL">POL</option>
+                        <option value="ADA">ADA</option>
+                        <option value="AVAX">AVAX</option>
+                        <option value="DOT">DOT</option>
+                        <option value="BNB">BNB</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                        <option value="LTC">LTC</option>
+                        <option value="DOGE">DOGE</option>
+                    </select>
+                    <input type="text" class="form-control" id="short_list" placeholder="手動輸入作空Pool列表">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="alert_price">目標價格</label>
+                    <input type="text" class="form-control" id="alert_price" placeholder="輸入目標價格">
+                </div>
+                <div class="form-group col-md-6">    
+                    <label for="current_price">參考當前價格: <span id="current_ratio">--</span></label>
+                    <button type="button" class="btn btn-primary" onclick="getCurrentPrice()">取得目前價格</button>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="memo">備註 (選填)</label>
+                    <input type="text" class="form-control" id="memo" placeholder="輸入備註">
+                </div>
+                <div class="form-group col-md-6">
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitAlert()">送出通知設定</button>
+            <button type="button" class="btn btn-secondary" onclick="cancelAlert()">取消</button>
+        </form>
+        <br/>
+    </div>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        document.addEventListener('click', (event) => {
+            const tags = ['INPUT', 'TEXTAREA']
+            const focused = document.activeElement
+            
+            if (focused && focused !== event.target && tags.includes(focused.tagName)) {
+                focused.blur()
+            }
+        })
+        
+        const telegram = Telegram.WebApp;
+        telegram.ready();
+
+        document.getElementById('long').onchange = function() {
+            localStorage.setItem('PriceAlert_long', this.value);
+            updateSymbolNames();
+        };
+
+        document.getElementById('short').onchange = function() {
+            localStorage.setItem('PriceAlert_short', this.value);
+            updateSymbolNames();
+        };
+        
+        document.getElementById('long_list').onchange = function() {
+            const listValue = this.value.replace(/\s/g, '');
+            const selectElement = document.getElementById('long');
+            if (listValue) {
+                l = listValue.split(',');
+                selectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    selectElement.add(option);
+                    selectElement.value = l[i];
+                };
+            } else {
+                defaultCoins = ['BTC', 'ETH', 'ETC', 'ATOM', 'POL', 'ADA', 'AVAX', 'DOT', 'BNB', 'SOL', 'XRP', 'LTC', 'DOGE'];
+                selectElement.innerHTML = '';
+                for (i = 0; i < defaultCoins.length; i++) {
+                    const option = new Option(defaultCoins[i], defaultCoins[i]);
+                    selectElement.add(option);
+                };
+                selectElement.value = 'BTC';
+            }
+
+            localStorage.setItem('PriceAlert_long_list', listValue);
+            updateSymbolNames();
+        };
+
+        document.getElementById('short_list').onchange = function() {
+            const listValue = this.value.replace(/\s/g, '');
+            const selectElement = document.getElementById('short');
+            if (listValue) {
+                l = listValue.split(',');
+                selectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    selectElement.add(option);
+                    selectElement.value = l[i];
+                };
+            } else {
+                defaultCoins = ['BTC', 'ETH', 'ETC', 'ATOM', 'POL', 'ADA', 'AVAX', 'DOT', 'BNB', 'SOL', 'XRP', 'LTC', 'DOGE'];
+                selectElement.innerHTML = '';
+                for (i = 0; i < defaultCoins.length; i++) {
+                    const option = new Option(defaultCoins[i], defaultCoins[i]);
+                    selectElement.add(option);
+                };
+                selectElement.value = 'ETH';
+            }
+
+            localStorage.setItem('PriceAlert_short_list', listValue);
+            updateSymbolNames();
+        };
+
+        function updateSymbolNames() {
+            const longName = document.getElementById('long').value;
+            const shortName = document.getElementById('short').value;
+            
+            document.getElementById('long_name').textContent = longName;
+            document.getElementById('short_name').textContent = shortName;
+        }
+        
+        function initForm() {
+            // Read values from localStorage and URL parameters
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            
+            let longValue = localStorage.getItem('PriceAlert_long');
+            let shortValue = localStorage.getItem('PriceAlert_short');
+            
+            if (urlParams.has('long')) {
+                const longParams = urlParams.get('long').split('/');
+                longValue = longParams[0];
+            }
+            
+            if (urlParams.has('short')) {
+                const shortParams = urlParams.get('short').split('/');
+                shortValue = shortParams[0];
+            }
+
+            const longListValue = localStorage.getItem('PriceAlert_long_list');
+            const shortListValue = localStorage.getItem('PriceAlert_short_list');
+
+            // Set values from long_list if available
+            if (longListValue) {
+                document.getElementById('long_list').value = longListValue;
+                const l = longListValue.split(',');
+                const longSelectElement = document.getElementById('long');
+                longSelectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    longSelectElement.add(option);
+                };
+            }
+
+            // Set values from short_list if available
+            if (shortListValue) {
+                document.getElementById('short_list').value = shortListValue;
+                const l = shortListValue.split(',');
+                const shortSelectElement = document.getElementById('short');
+                shortSelectElement.innerHTML = '';
+                for (i = 0; i < l.length; i++) {
+                    const option = new Option(l[i], l[i]);
+                    shortSelectElement.add(option);
+                };
+            }
+
+            // Set values for long and short selectors
+            if (longValue && document.getElementById('long').querySelector(`option[value="${longValue}"]`)) {
+                document.getElementById('long').value = longValue;
+            } else {
+                document.getElementById('long').selectedIndex = 0;
+            }
+
+            if (shortValue && document.getElementById('short').querySelector(`option[value="${shortValue}"]`)) {
+                document.getElementById('short').value = shortValue;
+            } else {
+                document.getElementById('short').selectedIndex = 0;
+            }
+
+            // Set target price if available in URL
+            if (urlParams.has('ratio')) {
+                document.getElementById('current_ratio').textContent = urlParams.get('ratio');
+            }
+
+            updateSymbolNames();
+        }
+
+        function getCurrentPrice() {
+            const long = document.getElementById('long').value;
+            const short = document.getElementById('short').value;
+            
+            if (long === short) {
+                telegram.showAlert('作多與作空標的不可相同');
+                return;
+            }
+            
+            const result = 'action=getPrice&long=' + long + '&short=' + short;
+            
+            telegram.showConfirm("取得 " + long + "/" + short + " 價格?", function(isOK){
+                if (isOK) {
+                    telegram.sendData(result);
+                }
+            });
+        }
+
+        function submitAlert() {
+            const long = document.getElementById('long').value;
+            const short = document.getElementById('short').value;
+            const alert_price = document.getElementById('alert_price').value;
+            const memo = document.getElementById('memo').value;
+            
+            // Validation
+            if (long === short) {
+                telegram.showAlert('作多與作空標的不可相同');
+                return;
+            }
+            
+            if (!alert_price) {
+                telegram.showAlert('請輸入目標價格');
+                return;
+            }
+            
+            if (isNaN(alert_price) || parseFloat(alert_price) <= 0) {
+                telegram.showAlert('目標價格必須為大於0的數字');
+                return;
+            }
+            
+            // Store values in localStorage
+            localStorage.setItem('PriceAlert_long', long);
+            localStorage.setItem('PriceAlert_short', short);
+            
+            // Format the data to send
+            let result = 'long=' + long + '&short=' + short + '&alert_price=' + alert_price;
+            
+            if (memo) {
+                result += '&memo=' + encodeURIComponent(memo);
+            }
+            
+            // Confirmation dialog
+            let confirmMessage = "請確認到價通知設定:\n" +
+                "作多標的: " + long + "\n" +
+                "作空標的: " + short + "\n" +
+                "目標價格: " + alert_price;
+                
+            if (memo) {
+                confirmMessage += "\n備註: " + memo;
+            }
+            
+            telegram.showConfirm(confirmMessage, function(isOK){
+                if (isOK) {
+                    telegram.sendData(result);
+                }
+            });
+        }
+
+        function cancelAlert() {
+            telegram.showConfirm("取消設定到價通知?", function(isOK){
+                if (isOK) {
+                    telegram.sendData("cancelPriceAlert");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

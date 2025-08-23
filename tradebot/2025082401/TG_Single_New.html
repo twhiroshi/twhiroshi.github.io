@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單幣-建立新單</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #cccccc);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--tg-theme-secondary-bg-color, #f8f8f8);
+            color: var(--tg-theme-text-color, #000000);
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #0088cc);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .cancel-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: transparent;
+            color: var(--tg-theme-destructive-text-color, #ff3b30);
+            border: 1px solid var(--tg-theme-destructive-text-color, #ff3b30);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .error-text {
+            color: var(--tg-theme-destructive-text-color, #ff3b30);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .price-type-info {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-top: 3px;
+        }
+        .validation-info {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-top: 3px;
+            padding: 8px;
+            background-color: var(--tg-theme-secondary-bg-color, #f8f8f8);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>單幣-建立新單(ver:2025082401)</h2>
+        <form id="singleOrderForm">
+            <div class="form-group">
+                <label for="symbol">標的幣種</label>
+                <input type="text" id="symbol" placeholder="如：BTC、ETH" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="period">週期</label>
+                    <select id="period" required>
+                        <option value="30m">30分鐘</option>
+                        <option value="1h" selected>1小時</option>
+                        <option value="2h">2小時</option>
+                        <option value="4h">4小時</option>
+                        <option value="8h">8小時</option>
+                        <option value="1d">1天</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="direction">交易方向</label>
+                    <select id="direction" required onchange="updateValidationInfo()">
+                        <option value="">請選擇</option>
+                        <option value="long">作多</option>
+                        <option value="short">作空</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="R">R值 (USDT)</label>
+                    <input type="number" id="R" placeholder="風險單位，如：10" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="priceType">價格類型</label>
+                    <select id="priceType" required onchange="togglePriceInput()">
+                        <option value="">請選擇</option>
+                        <option value="market">市價單</option>
+                        <option value="limit">掛單</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" id="orderPriceGroup" style="display: none;">
+                <label for="orderPrice">掛單價格</label>
+                <input type="number" id="orderPrice" placeholder="掛單價格" step="0.00001" min="0">
+                <div class="price-type-info">僅限掛單類型需填寫</div>
+            </div>
+
+            <div class="form-group">
+                <label for="stopLossPrice">停損價格</label>
+                <input type="number" id="stopLossPrice" placeholder="停損價格" step="0.00001" min="0" required onchange="updateValidationInfo()">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="adjustATR">上調停利ATR倍數</label>
+                    <input type="number" id="adjustATR" placeholder="如：2.0" step="0.1" min="0.1" value="2.0" required>
+                </div>
+                <div class="form-group">
+                    <label for="leverage">槓桿倍數</label>
+                    <input type="number" id="leverage" placeholder="如：10" step="1" min="1" max="125" value="10" required>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableScaling">
+                <label for="enableScaling">啟用加碼功能</label>
+            </div>
+
+            <div class="validation-info" id="validationInfo" style="display: none;">
+                <!-- 動態顯示驗證資訊 -->
+            </div>
+
+            <button type="button" class="submit-btn" onclick="submitOrder()">建立訂單</button>
+            <button type="button" class="cancel-btn" onclick="cancelOrder()">取消</button>
+        </form>
+    </div>
+
+    <script>
+        // 初始化 Telegram WebApp
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+
+        function togglePriceInput() {
+            const priceType = document.getElementById('priceType').value;
+            const orderPriceGroup = document.getElementById('orderPriceGroup');
+            const orderPriceInput = document.getElementById('orderPrice');
+            
+            if (priceType === 'limit') {
+                orderPriceGroup.style.display = 'block';
+                orderPriceInput.required = true;
+            } else {
+                orderPriceGroup.style.display = 'none';
+                orderPriceInput.required = false;
+                orderPriceInput.value = '';
+            }
+            updateValidationInfo();
+        }
+
+        function updateValidationInfo() {
+            const direction = document.getElementById('direction').value;
+            const priceType = document.getElementById('priceType').value;
+            const orderPrice = parseFloat(document.getElementById('orderPrice').value);
+            const stopLossPrice = parseFloat(document.getElementById('stopLossPrice').value);
+            const validationInfo = document.getElementById('validationInfo');
+
+            if (!direction || !stopLossPrice || (priceType === 'limit' && !orderPrice)) {
+                validationInfo.style.display = 'none';
+                return;
+            }
+
+            let infoText = '';
+            let isValid = true;
+
+            if (direction === 'long') {
+                infoText = '作多規則：';
+                if (priceType === 'limit') {
+                    if (orderPrice > stopLossPrice) {
+                        infoText += `✅ 掛單價(${orderPrice}) > 停損價(${stopLossPrice})`;
+                    } else {
+                        infoText += `❌ 掛單價(${orderPrice}) 應大於停損價(${stopLossPrice})`;
+                        isValid = false;
+                    }
+                } else {
+                    infoText += ' 市價單將以當前市場價格執行';
+                }
+            } else if (direction === 'short') {
+                infoText = '作空規則：';
+                if (priceType === 'limit') {
+                    if (orderPrice < stopLossPrice) {
+                        infoText += `✅ 掛單價(${orderPrice}) < 停損價(${stopLossPrice})`;
+                    } else {
+                        infoText += `❌ 掛單價(${orderPrice}) 應小於停損價(${stopLossPrice})`;
+                        isValid = false;
+                    }
+                } else {
+                    infoText += ' 市價單將以當前市場價格執行';
+                }
+            }
+
+            validationInfo.textContent = infoText;
+            validationInfo.style.display = 'block';
+            validationInfo.style.color = isValid ? 'var(--tg-theme-hint-color, #999999)' : 'var(--tg-theme-destructive-text-color, #ff3b30)';
+
+            return isValid;
+        }
+
+        function validateForm() {
+            const symbol = document.getElementById('symbol').value.trim();
+            const period = document.getElementById('period').value;
+            const direction = document.getElementById('direction').value;
+            const R = parseFloat(document.getElementById('R').value);
+            const priceType = document.getElementById('priceType').value;
+            const orderPrice = document.getElementById('orderPrice').value;
+            const stopLossPrice = parseFloat(document.getElementById('stopLossPrice').value);
+            const adjustATR = parseFloat(document.getElementById('adjustATR').value);
+            const leverage = parseInt(document.getElementById('leverage').value);
+
+            // 基本欄位檢查
+            if (!symbol || !period || !direction || !R || !priceType || !stopLossPrice || !adjustATR || !leverage) {
+                alert('請填寫所有必填欄位');
+                return false;
+            }
+
+            // 掛單價格檢查
+            if (priceType === 'limit' && !orderPrice) {
+                alert('掛單類型必須填寫掛單價格');
+                return false;
+            }
+
+            // 價格邏輯驗證
+            if (priceType === 'limit') {
+                const orderPriceNum = parseFloat(orderPrice);
+                if (direction === 'long' && orderPriceNum <= stopLossPrice) {
+                    alert('作多時，掛單價格必須大於停損價格');
+                    return false;
+                }
+                if (direction === 'short' && orderPriceNum >= stopLossPrice) {
+                    alert('作空時，掛單價格必須小於停損價格');
+                    return false;
+                }
+            }
+
+            // 數值範圍檢查
+            if (R <= 0 || stopLossPrice <= 0 || adjustATR <= 0 || leverage < 1 || leverage > 125) {
+                alert('請確認數值範圍正確');
+                return false;
+            }
+
+            return true;
+        }
+
+        function submitOrder() {
+            if (!validateForm()) {
+                return;
+            }
+
+            // 在提交前保存表單狀態
+            saveFormState();
+
+            const formData = {
+                symbol: document.getElementById('symbol').value.trim().toUpperCase(),
+                period: document.getElementById('period').value,
+                direction: document.getElementById('direction').value,
+                R: document.getElementById('R').value,
+                priceType: document.getElementById('priceType').value,
+                orderPrice: document.getElementById('orderPrice').value || '',
+                stopLossPrice: document.getElementById('stopLossPrice').value,
+                adjustATR: document.getElementById('adjustATR').value,
+                leverage: document.getElementById('leverage').value,
+                enableScaling: document.getElementById('enableScaling').checked
+            };
+
+            // 將表單資料轉換為字串格式，類似現有的多空單格式
+            const dataString = Object.entries(formData)
+                .map(([key, value]) => `${key}=${value}`)
+                .join('&');
+
+            // 發送資料到 Telegram
+            window.Telegram.WebApp.sendData(dataString);
+        }
+
+        function cancelOrder() {
+            window.Telegram.WebApp.sendData('cancelSingleOrder');
+        }
+
+        // 自動儲存表單狀態
+        function saveFormState() {
+            const formData = {
+                symbol: document.getElementById('symbol').value,
+                period: document.getElementById('period').value,
+                direction: document.getElementById('direction').value,
+                R: document.getElementById('R').value,
+                priceType: document.getElementById('priceType').value,
+                orderPrice: document.getElementById('orderPrice').value,
+                stopLossPrice: document.getElementById('stopLossPrice').value,
+                adjustATR: document.getElementById('adjustATR').value,
+                leverage: document.getElementById('leverage').value,
+                enableScaling: document.getElementById('enableScaling').checked
+            };
+            localStorage.setItem('singleOrderForm', JSON.stringify(formData));
+        }
+
+        function loadFormState() {
+            const saved = localStorage.getItem('singleOrderForm');
+            if (saved) {
+                const formData = JSON.parse(saved);
+                document.getElementById('symbol').value = formData.symbol || '';
+                document.getElementById('period').value = formData.period || '1h';
+                document.getElementById('direction').value = formData.direction || '';
+                document.getElementById('R').value = formData.R || '';
+                document.getElementById('priceType').value = formData.priceType || '';
+                document.getElementById('orderPrice').value = formData.orderPrice || '';
+                document.getElementById('stopLossPrice').value = formData.stopLossPrice || '';
+                document.getElementById('adjustATR').value = formData.adjustATR || '2.0';
+                document.getElementById('leverage').value = formData.leverage || '10';
+                document.getElementById('enableScaling').checked = formData.enableScaling || false;
+                
+                // 觸發相關的更新邏輯
+                togglePriceInput();
+                updateValidationInfo();
+            }
+        }
+
+        // 頁面載入時恢復表單狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFormState();
+            
+            // 監聽表單變化並自動儲存
+            document.getElementById('singleOrderForm').addEventListener('change', saveFormState);
+        });
+    </script>
+</body>
+</html>
