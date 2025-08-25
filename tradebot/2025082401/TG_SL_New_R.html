@@ -448,6 +448,11 @@
                 savePercent = 0;
                 trailingCondition = Number(Math.abs(trailingCondition * RPercent).toFixed(3));
                 trailingAmount = Number(Math.abs(trailingAmount * RPercent).toFixed(3));
+            } else if (preserveType === 'preserve_trailing') {
+                preservePercent = Number(Math.abs(preservePercent * RPercent).toFixed(3));
+                savePercent = Number(Math.abs(savePercent * RPercent).toFixed(3));
+                trailingCondition = Number(Math.abs(trailingCondition * RPercent).toFixed(3));
+                trailingAmount = Number(Math.abs(trailingAmount * RPercent).toFixed(3));
             } else {
                 preservePercent = 0;
                 savePercent = 0;
@@ -455,12 +460,14 @@
                 trailingAmount = 0;
             }
             var result = '';
-            result = 'long=' + long + '&short=' + short + '&RPercent=' + RPercent + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent + '&trailingCondition=' + trailingCondition + '&trailingAmount=' + trailingAmount;
+            result = 'long=' + long + '&short=' + short + '&RPercent=' + RPercent + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent + '&trailingCondition=' + trailingCondition + '&trailingAmount=' + trailingAmount + '&preserveType=' + preserveType;
             var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\n1R幾%:'+ RPercent + '%\nSL:' + SL + '%('+ orig_SL + 'R)\nTP:' + TP + '%(' + orig_TP +'R)\n下單金額:' + R + ' U\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n';
             if (preserveType === 'preserve') {
                 checkResult += '自動保本條件:' + preservePercent + '%(' + orig_preservePercent + 'R)\n保本%數:' + savePercent + '%(' + orig_savePercent + 'R)';
             } else if (preserveType === 'trailing') {
                 checkResult += '移動停損啟動條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
+            } else if (preserveType === 'preserve_trailing') {
+                checkResult += '保本+移動停損模式\n自動保本條件:' + preservePercent + '%(' + orig_preservePercent + 'R)\n保本%數:' + savePercent + '%(' + orig_savePercent + 'R)\n移動停損啟動條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
             } else {
                 checkResult += '不啟用保本/移動停損';
             }
