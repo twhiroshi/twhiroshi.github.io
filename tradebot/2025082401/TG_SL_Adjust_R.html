@@ -52,6 +52,7 @@
                     <select class="form-control" id="preserveType" onchange="toggleInputs()">
                         <option value="preserve" selected>保本</option>
                         <option value="trailing">移動停損</option>
+                        <option value="preserve_trailing">保本+移動停損</option>
                         <option value="none">不啟用</option>
                     </select>
                 </div>
@@ -124,9 +125,15 @@
             document.getElementById('savePercent').value = Number((urlParams.get('savePercent')/RPercent).toFixed(3));
             document.getElementById('trailingCondition').value = Number((urlParams.get('trailingCondition')/RPercent).toFixed(3));
             document.getElementById('trailingAmount').value = Number((urlParams.get('trailingAmount')/RPercent).toFixed(3));
-            if (urlParams.get('preservePercent') != 0 && urlParams.get('savePercent') != 0) {
+            // 判斷當前的保本/移動停損模式
+            const hasPreserve = urlParams.get('preservePercent') != 0 && urlParams.get('savePercent') != 0;
+            const hasTrailing = urlParams.get('trailingCondition') != 0 && urlParams.get('trailingAmount') != 0;
+            
+            if (hasPreserve && hasTrailing) {
+                document.getElementById('preserveType').value = 'preserve_trailing';
+            } else if (hasPreserve) {
                 document.getElementById('preserveType').value = 'preserve';
-            } else if (urlParams.get('trailingCondition') != 0 && urlParams.get('trailingAmount') != 0) {
+            } else if (hasTrailing) {
                 document.getElementById('preserveType').value = 'trailing';
             } else {
                 document.getElementById('preserveType').value = 'none';
@@ -136,8 +143,10 @@
 
         function toggleInputs() {
             const type = document.getElementById('preserveType').value;
-            document.getElementById('preserveInputs').style.display = type === 'preserve' ? 'flex' : 'none';
-            document.getElementById('trailingInputs').style.display = type === 'trailing' ? 'flex' : 'none';
+            document.getElementById('preserveInputs').style.display = 
+                (type === 'preserve' || type === 'preserve_trailing') ? 'flex' : 'none';
+            document.getElementById('trailingInputs').style.display = 
+                (type === 'trailing' || type === 'preserve_trailing') ? 'flex' : 'none';
         }
 
         function submitAdjust() {
@@ -194,6 +203,51 @@
                     alert('移動停損啟動條件和回吐移動R數必須為大於0的數字');
                     return;
                 }
+            } else if (preserveType === 'preserve_trailing') {
+                // 保本+移動停損模式的驗證
+                if (preservePercent === '') {
+                    alert('請輸入自動保本條件');
+                    return;
+                }
+                if (savePercent === '') {
+                    alert('請輸入保本R數');
+                    return;
+                }
+                if (trailingCondition === '') {
+                    alert('請輸入移動停損啟動條件');
+                    return;
+                }
+                if (trailingAmount === '') {
+                    alert('請輸入回吐移動R數');
+                    return;
+                }
+                if (isNaN(preservePercent) || isNaN(savePercent) || isNaN(trailingCondition) || isNaN(trailingAmount)) {
+                    alert('所有參數必須為數字');
+                    return;
+                }
+                if (preservePercent <= 0 || savePercent <= 0 || trailingCondition <= 0 || trailingAmount <= 0) {
+                    alert('所有參數必須為大於0的數字');
+                    return;
+                }
+                // 關鍵驗證：保本啟動R數不可大於等於移動停損啟動R數
+                if (parseFloat(preservePercent) >= parseFloat(trailingCondition)) {
+                    alert('保本啟動R數不可大於等於移動停損啟動R數');
+                    return;
+                }
+            }
+            
+            // 根據選擇的模式設定參數
+            if (preserveType === 'none') {
+                preservePercent = 0;
+                savePercent = 0;
+                trailingCondition = 0;
+                trailingAmount = 0;
+            } else if (preserveType === 'preserve') {
+                trailingCondition = 0;
+                trailingAmount = 0;
+            } else if (preserveType === 'trailing') {
+                preservePercent = 0;
+                savePercent = 0;
             }
 
             
