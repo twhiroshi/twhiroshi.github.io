@@ -101,6 +101,7 @@
                     <select class="form-control" id="preserveType" onchange="toggleInputs()">
                         <option value="preserve" selected>保本</option>
                         <option value="trailing">移動停損</option>
+                        <option value="preserve_trailing">保本+移動停損</option>
                         <option value="none">不啟用</option>
                     </select>
                 </div>
@@ -196,8 +197,10 @@
 
         function toggleInputs() {
             const type = document.getElementById('preserveType').value;
-            document.getElementById('preserveInputs').style.display = type === 'preserve' ? 'flex' : 'none';
-            document.getElementById('trailingInputs').style.display = type === 'trailing' ? 'flex' : 'none';
+            document.getElementById('preserveInputs').style.display = 
+                (type === 'preserve' || type === 'preserve_trailing') ? 'flex' : 'none';
+            document.getElementById('trailingInputs').style.display = 
+                (type === 'trailing' || type === 'preserve_trailing') ? 'flex' : 'none';
         }
         
         function initForm() {
@@ -390,6 +393,51 @@
                     alert('自動保本條件和保本R數必須為大於0的數字');
                     return;
                 }
+            } else if(preserveType === 'preserve_trailing') {
+                // 保本+移動停損模式的驗證
+                if (preservePercent === '') {
+                    alert('請輸入自動保本條件');
+                    return;
+                }
+                if (savePercent === '') {
+                    alert('請輸入保本R數');
+                    return;
+                }
+                if (trailingCondition === '') {
+                    alert('請輸入移動停損啟動條件');
+                    return;
+                }
+                if (trailingAmount === '') {
+                    alert('請輸入回吐移動R數');
+                    return;
+                }
+                if (isNaN(preservePercent) || isNaN(savePercent) || isNaN(trailingCondition) || isNaN(trailingAmount)) {
+                    alert('所有參數必須為數字');
+                    return;
+                }
+                if (preservePercent <= 0 || savePercent <= 0 || trailingCondition <= 0 || trailingAmount <= 0) {
+                    alert('所有參數必須為大於0的數字');
+                    return;
+                }
+                // 關鍵驗證：保本啟動R數不可大於等於移動停損啟動R數
+                if (parseFloat(preservePercent) >= parseFloat(trailingCondition)) {
+                    alert('保本啟動R數不可大於等於移動停損啟動R數');
+                    return;
+                }
+            }
+            
+            // 根據選擇的模式設定參數
+            if (preserveType === 'none') {
+                preservePercent = '0';
+                savePercent = '0';
+                trailingCondition = '0';
+                trailingAmount = '0';
+            } else if (preserveType === 'preserve') {
+                trailingCondition = '0';
+                trailingAmount = '0';
+            } else if (preserveType === 'trailing') {
+                preservePercent = '0';
+                savePercent = '0';
             }
 
             const marginValue = (R / (Math.abs(SL) / 100) / Leverage*2).toFixed(2);
@@ -430,6 +478,11 @@
                 savePercent = 0;
                 trailingCondition = Number(Math.abs(trailingCondition * RPercent).toFixed(3));
                 trailingAmount = Number(Math.abs(trailingAmount * RPercent).toFixed(3));
+            } else if (preserveType === 'preserve_trailing') {
+                preservePercent = Number(Math.abs(preservePercent * RPercent).toFixed(3));
+                savePercent = Number(Math.abs(savePercent * RPercent).toFixed(3));
+                trailingCondition = Number(Math.abs(trailingCondition * RPercent).toFixed(3));
+                trailingAmount = Number(Math.abs(trailingAmount * RPercent).toFixed(3));
             } else {
                 preservePercent = 0;
                 savePercent = 0;
@@ -437,12 +490,14 @@
                 trailingAmount = 0;
             }
             var result = '';
-            result = 'action=order&long=' + long + '&short=' + short + '&RPercent=' + RPercent + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent + '&trailingCondition=' + trailingCondition + '&trailingAmount=' + trailingAmount + '&limitOrderPrice=' + limitOrderPrice;
+            result = 'action=order&long=' + long + '&short=' + short + '&RPercent=' + RPercent + '&SL=' + SL + '&TP=' + TP + '&R=' + R + '&Leverage=' + Leverage + '&preservePercent=' + preservePercent + '&savePercent=' + savePercent + '&trailingCondition=' + trailingCondition + '&trailingAmount=' + trailingAmount + '&limitOrderPrice=' + limitOrderPrice + '&preserveType=' + preserveType;
             var checkResult = '請確認參數:\n作多:' + long + '\n作空:' + short + '\n掛單價格:' + limitOrderPrice +'\n1R幾%:'+ RPercent + '%\nSL:' + SL + '%('+ orig_SL + 'R)\nTP:' + TP + '%(' + orig_TP +'R)\n下單金額:' + R + ' U\n槓桿倍數:' + Leverage + '(估算保證金：' + marginValue +'U)\n';
             if (preserveType === 'preserve') {
                 checkResult += '自動保本條件:' + preservePercent + '%(' + orig_preservePercent + 'R)\n保本%數:' + savePercent + '%(' + orig_savePercent + 'R)';
             } else if (preserveType === 'trailing') {
                 checkResult += '移動停損啟動條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
+            } else if (preserveType === 'preserve_trailing') {
+                checkResult += '保本+移動停損模式\n自動保本條件:' + preservePercent + '%(' + orig_preservePercent + 'R)\n保本%數:' + savePercent + '%(' + orig_savePercent + 'R)\n移動停損啟動條件:' + trailingCondition + '%(' + orig_trailingCondition + 'R)\n回吐移動R數:' + trailingAmount + '%(' + orig_trailingAmount + 'R)';
             } else {
                 checkResult += '不啟用保本/移動停損';
             }
