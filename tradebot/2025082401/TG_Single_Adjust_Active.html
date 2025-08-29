@@ -172,7 +172,7 @@
             document.getElementById('currentStopLoss').textContent = orderData.currentStopLoss;
             document.getElementById('leverage').textContent = `${orderData.leverage}x`;
             document.getElementById('atrPeriod').textContent = orderData.period;
-            document.getElementById('enableScaling').textContent = orderData.enableScaling === 'true' ? '已啟用' : '未啟用';
+            document.getElementById('enableScaling').textContent = (orderData.enableScaling === 'true' || orderData.enableScaling === 'True') ? '已啟用' : '未啟用';
             document.getElementById('realizedProfit').textContent = `$${orderData.realizedProfit}`;
             
             // 設定當前 ATR 倍數
