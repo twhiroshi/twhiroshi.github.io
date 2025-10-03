@@ -25,14 +25,18 @@
 
             var text = copyText3.value.replace(/\s/g, '');
             console.log(text)
-            let datePattern = /🗓(\d{8})/g;
+            let datePattern = /[🗓|🗓️]\s*(\d{8})/g;
             let firstPattern = /強勢族群：(.*?)\n/g;
             let secondPattern = /次強勢族群：(.*?)\n/g;
             let othersPattern = /(.*?)\n/g;
 
             let dates = [...text.matchAll(datePattern)].map(match => match[1]);
             let uniqueDates = [...new Set(dates)]; // Remove duplicate dates
+            console.log(uniqueDates)
             text = text.replaceAll('🗓'+uniqueDates, '\n').replaceAll('🗓 '+uniqueDates, '\n').replaceAll('🔸', '\n');
+            text = text.replaceAll('🗓️'+uniqueDates, '\n').replaceAll('🗓️ '+uniqueDates, '\n');
+            text = text.replaceAll('#N/A','')
+
             console.log("1:", text);
             let firstGroup = [...text.matchAll(firstPattern)].map(match => match[1]);
             console.log("2:", firstGroup)
@@ -41,7 +45,8 @@
             let secondGroup = [...text.matchAll(secondPattern)].map(match => match[1]);
             console.log("3:", secondGroup)
             var tmp = text.split('\n').slice(3);
-            let otherGroup = [tmp[0] + ',' + tmp[1]];
+            let otherGroup = [tmp[1] + ',' + tmp[2]];
+            otherGroup[0] = otherGroup[0].replace(/,$/, '');
             console.log("4:",otherGroup)
             
             var jsonData = {
