@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下單SOP檢查清單</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            background-color: #f8f9fa;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+            position: relative;
+        }
+        
+        .checklist li:hover {
+            background-color: #e8f4f8;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+        
+        .item-content {
+            flex: 1;
+        }
+        
+        .item-title {
+            font-weight: bold;
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .item-description {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .completed {
+            background-color: #d4edda !important;
+            border-left-color: #28a745;
+        }
+        
+        .completed .item-title {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .execute-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .execute-button:hover {
+            background-color: #218838;
+        }
+        
+        .execute-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>下單SOP檢查清單</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            請確認以下所有項目都已完成，才可執行下單操作
+        </p>
+        
+        <ul class="checklist">
+            <li>
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" id="item1">
+                    <div class="item-content">
+                        <div class="item-title">疊圖確認</div>
+                        <div class="item-description">
+                            只作反轉均線跟延續均線盤整的均線圖<br>
+                            • 反轉均線的底部盤整為W底/VCP<br>
+                            • 延續均線盤整狀況為壓一下
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+            <li>
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" id="item2">
+                    <div class="item-content">
+                        <div class="item-title">大時區均線確認</div>
+                        <div class="item-description">
+                            大時區30MA均線盡量在K線/小時區時區均線之下，或是觀察小時區趨勢成型後是否能讓大時區均線反轉
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <li>
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" id="item3">
+                    <div class="item-content">
+                        <div class="item-title">小平台形成確認</div>
+                        <div class="item-description">
+                            突破盤整區後，需要出現價格波動極小 & 量縮的小平台<br>
+                            至多只作第1/2組小平台，再後面就放棄不作，等下一個反轉/均線盤整區出現
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <li>
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" id="item4">
+                    <div class="item-content">
+                        <div class="item-title">黑K型態確認</div>
+                        <div class="item-description">
+                            小平台出現2組黑K，每一組黑K數量為1~2<br>
+                            第2組黑K被吞沒後再下單
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+            <li>
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" id="item5">
+                    <div class="item-content">
+                        <div class="item-title">關鍵價位確認</div>
+                        <div class="item-description">
+                            回踩一定要踩到關鍵價位區間，關鍵價位可能為Ｗ底的頸線，或是突兀量的頂/底部
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        
+        <button class="execute-button" id="executeButton" disabled>
+            執行下單操作
+        </button>
+        
+        <div class="status-bar" id="statusBar">
+            進度: 0/4 完成
+        </div>
+    </div>
+    
+    <script>
+        const checkboxes = document.querySelectorAll('.checkbox');
+        const statusBar = document.getElementById('statusBar');
+        const executeButton = document.getElementById('executeButton');
+        
+        function updateStatus() {
+            const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = checkboxes.length;
+            
+            statusBar.textContent = `進度: ${completed}/${total} 完成`;
+            
+            executeButton.disabled = completed !== total;
+            
+            if (completed === total) {
+                executeButton.textContent = '✓ 所有項目已確認，可執行下單';
+                statusBar.style.backgroundColor = '#28a745';
+            } else {
+                executeButton.textContent = '執行下單操作';
+                statusBar.style.backgroundColor = '#3498db';
+            }
+        }
+        
+        checkboxes.forEach((checkbox, index) => {
+            checkbox.addEventListener('change', function() {
+                const listItem = this.closest('li');
+                if (this.checked) {
+                    listItem.classList.add('completed');
+                } else {
+                    listItem.classList.remove('completed');
+                }
+                updateStatus();
+            });
+        });
+        
+        executeButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                if (confirm('確認要執行下單操作嗎？')) {
+                    alert('下單操作執行中...');
+                }
+            }
+        });
+        
+        updateStatus();
+    </script>
+</body>
+</html>
