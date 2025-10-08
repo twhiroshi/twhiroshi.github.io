@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單幣-修改倉位(執行中)</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .info-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 8px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
+        }
+        .info-label {
+            color: var(--tg-theme-hint-color, #999999);
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        .info-value {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #cccccc);
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            box-sizing: border-box;
+        }
+        input:disabled, select:disabled {
+            background-color: var(--tg-theme-secondary-bg-color, #e0e0e0);
+            cursor: not-allowed;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: var(--tg-theme-button-color, #007aff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        .btn-danger {
+            background-color: #ff3b30;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        .price-type-info {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-top: 3px;
+        }
+        .warning-text {
+            color: #ff9500;
+            font-size: 13px;
+            margin-top: 5px;
+            padding: 8px;
+            background-color: rgba(255, 149, 0, 0.1);
+            border-radius: 4px;
+        }
+        .version {
+            text-align: center;
+            color: var(--tg-theme-hint-color, #999999);
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>單幣-修改倉位(執行中)(ver:2025100801)</h2>
+
+        <!-- 訂單資訊 (只顯示) -->
+        <div class="info-group">
+            <h3>訂單資訊</h3>
+            <div class="info-label">訂單編號</div>
+            <div class="info-value" id="orderId"></div>
+
+            <div class="info-label">交易標的</div>
+            <div class="info-value" id="symbolDirection"></div>
+
+            <div class="info-label">當前數量</div>
+            <div class="info-value" id="currentQuantity"></div>
+
+            <div class="info-label">平均成本</div>
+            <div class="info-value" id="averageCost"></div>
+
+            <div class="info-label">當前停損價格</div>
+            <div class="info-value" id="currentStopLoss"></div>
+
+            <div class="info-label">槓桿倍數</div>
+            <div class="info-value" id="leverage"></div>
+
+            <div class="info-label">週期</div>
+            <div class="info-value" id="atrPeriod"></div>
+
+            <div class="info-label">加碼設定</div>
+            <div class="info-value" id="enableScaling"></div>
+
+            <div class="info-label">已實現盈虧</div>
+            <div class="info-value" id="realizedProfit"></div>
+
+            <div class="info-label">停損模式</div>
+            <div class="info-value" id="stopLossMode"></div>
+        </div>
+
+        <!-- ATR 停損模式可修改參數 -->
+        <div id="atrModeInputs" style="display: none;">
+            <div class="form-group">
+                <label for="adjustATR">ATR 倍數 (影響動態停損調整)</label>
+                <input type="number" id="adjustATR" step="0.1" min="0.1" max="5.0" placeholder="輸入 ATR 倍數">
+                <div class="warning-text">⚠️ ATR 停損模式下無法切換至其他停損模式</div>
+            </div>
+        </div>
+
+        <!-- 保本/移動/保本+移動/固定R停損模式可修改參數 -->
+        <div id="advancedModeInputs" style="display: none;">
+            <div class="form-group">
+                <label for="stopLossMode">停損模式</label>
+                <select id="stopLossModeSelect" onchange="toggleStopLossModeInputs()">
+                    <option value="breakeven">保本停損</option>
+                    <option value="trailing">移動停損</option>
+                    <option value="preserve_trailing">保本+移動停損</option>
+                    <option value="fixed_r">固定R停損</option>
+                </select>
+                <div class="price-type-info">可在保本/移動/保本+移動/固定R停損模式間切換</div>
+            </div>
+
+            <div id="breakevenInputs" style="display: none;">
+                <div class="form-group">
+                    <label for="breakevenActivationR">保本啟動R數</label>
+                    <input type="number" id="breakevenActivationR" placeholder="如：2" step="0.1" min="0.1">
+                    <div class="price-type-info">達到此R數時觸發保本停損調整</div>
+                </div>
+                <div class="form-group">
+                    <label for="breakevenR">保本R數</label>
+                    <input type="number" id="breakevenR" placeholder="如：0.4" step="0.1" min="0">
+                    <div class="price-type-info">停損將調整至此R數位置（0表示成本價）</div>
+                </div>
+            </div>
+
+            <div id="trailingInputs" style="display: none;">
+                <div class="form-group">
+                    <label for="trailingActivationR">移動停損啟動R數</label>
+                    <input type="number" id="trailingActivationR" placeholder="如：3" step="0.1" min="0.1">
+                    <div class="price-type-info">達到此R數時，啟動移動停損</div>
+                </div>
+                <div class="form-group">
+                    <label for="trailingCallbackR">回吐移動R數</label>
+                    <input type="number" id="trailingCallbackR" placeholder="如：1.5" step="0.1" min="0.1">
+                    <div class="price-type-info">停損 = 最高盈虧 - 此R數</div>
+                </div>
+            </div>
+
+            <div id="fixedRInputs" style="display: none;">
+                <div class="form-group">
+                    <label for="fixedR">固定R數（獲利目標）</label>
+                    <input type="number" id="fixedR" placeholder="如：5" step="0.1" min="0.1">
+                    <div class="price-type-info">達到此R數時自動出場</div>
+                </div>
+                <div class="form-group">
+                    <label for="fixedStopLossR">固定停損R數</label>
+                    <input type="number" id="fixedStopLossR" placeholder="如：4（當獲利6R時，停損設4R保護）" step="0.1">
+                    <div class="price-type-info">盈虧達到此R數時停損出場（可為正數或負數，例如：當前6R設停損4R，或虧損設-1R）</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="submitModification()">確認修改</button>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-danger" onclick="manualClose()">手動平倉</button>
+            <button class="btn btn-secondary" onclick="cancelOperation()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        let orderData = {};
+        let isATRMode = false;  // 是否為純ATR停損模式
+
+        function initForm() {
+            tg.ready();
+            tg.expand();
+
+            // 從 URL 參數獲取訂單資訊
+            const urlParams = new URLSearchParams(window.location.search);
+            orderData = {
+                id: urlParams.get('id') || '',
+                symbol: urlParams.get('symbol') || '',
+                direction: urlParams.get('direction') || '',
+                quantity: urlParams.get('quantity') || '',
+                averageCost: urlParams.get('averageCost') || '',
+                currentStopLoss: urlParams.get('currentStopLoss') || '',
+                leverage: urlParams.get('leverage') || '',
+                period: urlParams.get('period') || '',
+                enableScaling: urlParams.get('enableScaling') || '',
+                realizedProfit: urlParams.get('realizedProfit') || '',
+                adjustATR: urlParams.get('adjustATR') || '',
+                enableBreakeven: urlParams.get('enableBreakeven') || 'false',
+                breakevenActivationR: urlParams.get('breakevenActivationR') || '0',
+                breakevenR: urlParams.get('breakevenR') || '0',
+                enableTrailing: urlParams.get('enableTrailing') || 'false',
+                trailingActivationR: urlParams.get('trailingActivationR') || '0',
+                trailingCallbackR: urlParams.get('trailingCallbackR') || '0',
+                enableFixedR: urlParams.get('enableFixedR') || 'false',
+                fixedR: urlParams.get('fixedR') || '0',
+                fixedStopLossR: urlParams.get('fixedStopLossR') || '-1'
+            };
+
+            // 填入訂單資訊
+            document.getElementById('orderId').textContent = orderData.id;
+            document.getElementById('symbolDirection').textContent = `${orderData.symbol} (${orderData.direction === 'long' ? '作多' : '作空'})`;
+            document.getElementById('currentQuantity').textContent = orderData.quantity;
+            document.getElementById('averageCost').textContent = orderData.averageCost;
+            document.getElementById('currentStopLoss').textContent = orderData.currentStopLoss;
+            document.getElementById('leverage').textContent = `${orderData.leverage}x`;
+            document.getElementById('atrPeriod').textContent = orderData.period;
+            document.getElementById('enableScaling').textContent = (orderData.enableScaling === 'true' || orderData.enableScaling === 'True') ? '已啟用' : '未啟用';
+            document.getElementById('realizedProfit').textContent = `$${orderData.realizedProfit}`;
+
+            // 判斷停損模式並顯示對應的修改區塊
+            const enableBreakeven = (orderData.enableBreakeven === 'true' || orderData.enableBreakeven === 'True');
+            const enableTrailing = (orderData.enableTrailing === 'true' || orderData.enableTrailing === 'True');
+            const enableFixedR = (orderData.enableFixedR === 'true' || orderData.enableFixedR === 'True');
+
+            let stopLossModeText = '';
+            if (!enableBreakeven && !enableTrailing && !enableFixedR) {
+                // 純ATR停損模式
+                isATRMode = true;
+                stopLossModeText = 'ATR 停損';
+                document.getElementById('atrModeInputs').style.display = 'block';
+                document.getElementById('advancedModeInputs').style.display = 'none';
+                document.getElementById('adjustATR').value = orderData.adjustATR;
+            } else {
+                // 保本/移動/保本+移動/固定R停損模式
+                isATRMode = false;
+                document.getElementById('atrModeInputs').style.display = 'none';
+                document.getElementById('advancedModeInputs').style.display = 'block';
+
+                // 確定當前模式
+                let currentMode = '';
+                if (enableBreakeven && enableTrailing) {
+                    currentMode = 'preserve_trailing';
+                    stopLossModeText = '保本+移動停損';
+                } else if (enableBreakeven) {
+                    currentMode = 'breakeven';
+                    stopLossModeText = '保本停損';
+                } else if (enableTrailing) {
+                    currentMode = 'trailing';
+                    stopLossModeText = '移動停損';
+                } else if (enableFixedR) {
+                    currentMode = 'fixed_r';
+                    stopLossModeText = '固定R停損';
+                }
+
+                // 設定下拉選單
+                document.getElementById('stopLossModeSelect').value = currentMode;
+
+                // 填入參數值
+                document.getElementById('breakevenActivationR').value = orderData.breakevenActivationR;
+                document.getElementById('breakevenR').value = orderData.breakevenR;
+                document.getElementById('trailingActivationR').value = orderData.trailingActivationR;
+                document.getElementById('trailingCallbackR').value = orderData.trailingCallbackR;
+                document.getElementById('fixedR').value = orderData.fixedR;
+                document.getElementById('fixedStopLossR').value = orderData.fixedStopLossR;
+
+                // 顯示對應的輸入框
+                toggleStopLossModeInputs();
+            }
+
+            document.getElementById('stopLossMode').textContent = stopLossModeText;
+        }
+
+        function toggleStopLossModeInputs() {
+            const mode = document.getElementById('stopLossModeSelect').value;
+            const breakevenInputs = document.getElementById('breakevenInputs');
+            const trailingInputs = document.getElementById('trailingInputs');
+            const fixedRInputs = document.getElementById('fixedRInputs');
+
+            // 隱藏所有輸入區域
+            breakevenInputs.style.display = 'none';
+            trailingInputs.style.display = 'none';
+            fixedRInputs.style.display = 'none';
+
+            // 根據模式顯示對應的輸入區域
+            if (mode === 'breakeven' || mode === 'preserve_trailing') {
+                breakevenInputs.style.display = 'block';
+            }
+
+            if (mode === 'trailing' || mode === 'preserve_trailing') {
+                trailingInputs.style.display = 'block';
+            }
+
+            if (mode === 'fixed_r') {
+                fixedRInputs.style.display = 'block';
+            }
+        }
+
+        function validateForm() {
+            if (isATRMode) {
+                // ATR 模式驗證
+                const adjustATR = parseFloat(document.getElementById('adjustATR').value);
+                if (!adjustATR || adjustATR < 0.1 || adjustATR > 5.0) {
+                    alert('請輸入有效的 ATR 倍數 (0.1-5.0)');
+                    return false;
+                }
+            } else {
+                // 保本/移動停損模式驗證
+                const mode = document.getElementById('stopLossModeSelect').value;
+
+                if (mode === 'breakeven' || mode === 'preserve_trailing') {
+                    const breakevenActivationR = parseFloat(document.getElementById('breakevenActivationR').value);
+                    const breakevenR = parseFloat(document.getElementById('breakevenR').value);
+
+                    if (!breakevenActivationR || breakevenActivationR <= 0) {
+                        alert('請輸入有效的保本啟動R數');
+                        return false;
+                    }
+                    if (breakevenR === null || breakevenR === undefined || isNaN(breakevenR) || breakevenR < 0) {
+                        alert('請輸入有效的保本R數（可為0）');
+                        return false;
+                    }
+                }
+
+                if (mode === 'trailing' || mode === 'preserve_trailing') {
+                    const trailingActivationR = parseFloat(document.getElementById('trailingActivationR').value);
+                    const trailingCallbackR = parseFloat(document.getElementById('trailingCallbackR').value);
+
+                    if (!trailingActivationR || trailingActivationR <= 0) {
+                        alert('請輸入有效的移動停損啟動R數');
+                        return false;
+                    }
+                    if (!trailingCallbackR || trailingCallbackR <= 0) {
+                        alert('請輸入有效的回吐移動R數');
+                        return false;
+                    }
+                }
+
+                // 保本+移動停損的參數驗證
+                if (mode === 'preserve_trailing') {
+                    const breakevenR = parseFloat(document.getElementById('breakevenActivationR').value);
+                    const trailingR = parseFloat(document.getElementById('trailingActivationR').value);
+                    if (breakevenR > trailingR) {
+                        alert('保本啟動R數不可大於移動停損啟動R數');
+                        return false;
+                    }
+                }
+
+                // 固定R停損的參數驗證
+                if (mode === 'fixed_r') {
+                    const fixedR = parseFloat(document.getElementById('fixedR').value);
+                    const fixedStopLossR = parseFloat(document.getElementById('fixedStopLossR').value);
+
+                    if (!fixedR || fixedR <= 0) {
+                        alert('請輸入有效的固定R數（獲利目標）');
+                        return false;
+                    }
+
+                    if (isNaN(fixedStopLossR)) {
+                        alert('請輸入有效的固定停損R數');
+                        return false;
+                    }
+
+                    if (fixedStopLossR >= fixedR) {
+                        alert('固定停損R數必須小於固定R數（獲利目標）');
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function submitModification() {
+            if (!validateForm()) {
+                return;
+            }
+
+            let data = `id=${orderData.id}`;
+            let confirmMessage = '';
+
+            if (isATRMode) {
+                // ATR 模式：只修改 ATR 倍數
+                const adjustATR = document.getElementById('adjustATR').value;
+                data += `&adjustATR=${adjustATR}`;
+                confirmMessage = `確認修改 ATR 倍數為 ${adjustATR}？`;
+            } else {
+                // 保本/移動停損模式：可修改模式和參數
+                const mode = document.getElementById('stopLossModeSelect').value;
+
+                if (mode === 'breakeven' || mode === 'preserve_trailing') {
+                    data += `&enableBreakeven=true`;
+                    data += `&breakevenActivationR=${document.getElementById('breakevenActivationR').value}`;
+                    data += `&breakevenR=${document.getElementById('breakevenR').value}`;
+                } else {
+                    data += `&enableBreakeven=false`;
+                    data += `&breakevenActivationR=0`;
+                    data += `&breakevenR=0`;
+                }
+
+                if (mode === 'trailing' || mode === 'preserve_trailing') {
+                    data += `&enableTrailing=true`;
+                    data += `&trailingActivationR=${document.getElementById('trailingActivationR').value}`;
+                    data += `&trailingCallbackR=${document.getElementById('trailingCallbackR').value}`;
+                } else {
+                    data += `&enableTrailing=false`;
+                    data += `&trailingActivationR=0`;
+                    data += `&trailingCallbackR=0`;
+                }
+
+                if (mode === 'fixed_r') {
+                    data += `&enableFixedR=true`;
+                    data += `&fixedR=${document.getElementById('fixedR').value}`;
+                    data += `&fixedStopLossR=${document.getElementById('fixedStopLossR').value}`;
+                } else {
+                    data += `&enableFixedR=false`;
+                    data += `&fixedR=0`;
+                    data += `&fixedStopLossR=-1`;
+                }
+
+                const modeText = mode === 'preserve_trailing' ? '保本+移動停損' :
+                                 mode === 'breakeven' ? '保本停損' :
+                                 mode === 'trailing' ? '移動停損' : '固定R停損';
+                confirmMessage = `確認修改停損模式為 ${modeText}？`;
+            }
+
+            if (confirm(confirmMessage)) {
+                tg.sendData(data);
+            }
+        }
+
+        function manualClose() {
+            const confirmMessage = `確認手動平倉 ${orderData.symbol} ${orderData.direction === 'long' ? '作多' : '作空'} 部位？`;
+            if (confirm(confirmMessage)) {
+                const data = `closeOrder=${orderData.id}`;
+                tg.sendData(data);
+            }
+        }
+
+        function cancelOperation() {
+            tg.sendData('cancelOperation');
+        }
+
+        // 初始化表單
+        window.onload = initForm;
+    </script>
+</body>
+</html>
