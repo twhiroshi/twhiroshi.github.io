@@ -148,10 +148,79 @@
             localStorage.removeItem('targetData');
             refreshTable();
         }
+
+        function triggerFileUpload() {
+            document.getElementById('fileUpload').click();
+        }
+
+        function handleFileUpload(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            // 從檔名擷取日期：RS_2026-03-01.txt → 20260301
+            var dateMatch = file.name.match(/(\d{4})-(\d{2})-(\d{2})/);
+            if (!dateMatch) {
+                alert('無法從檔名解析日期，請確認檔名格式如 RS_2026-03-01.txt');
+                event.target.value = '';
+                return;
+            }
+            var dateStr = dateMatch[1] + dateMatch[2] + dateMatch[3];
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var content = e.target.result;
+                var lines = content.split('\n').filter(function(line) { return line.trim() !== ''; });
+
+                var firstGroup = [];
+                var secondGroup = [];
+                var otherSymbols = [];
+
+                lines.forEach(function(line) {
+                    line = line.trim();
+                    if (line.startsWith('###大盤')) return; // 忽略大盤
+
+                    var parts = line.split(',').slice(1); // 移除第一個元素（###標籤）
+                    var symbols = parts
+                        .map(function(s) { return s.trim(); })
+                        .filter(function(s) { return s !== ''; })
+                        .map(function(s) { return s.replace('BINANCE:', '').replace('USDT.P', ''); });
+
+                    if (line.startsWith('###強勢族群')) {
+                        firstGroup = [symbols.join(',')];
+                    } else if (line.startsWith('###次強勢族群')) {
+                        secondGroup = [symbols.join(',')];
+                    } else {
+                        otherSymbols = otherSymbols.concat(symbols);
+                    }
+                });
+
+                var jsonData = {
+                    uniqueDates: [dateStr],
+                    firstGroup: firstGroup,
+                    secondGroup: secondGroup,
+                    otherGroup: [otherSymbols.join(',')]
+                };
+
+                // 存入 localStorage（與 copyToLocalStorage 相同邏輯）
+                var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
+                var filteredData = storedData.filter(function(data) {
+                    return !jsonData.uniqueDates.includes(data.uniqueDates[0]);
+                });
+                filteredData.unshift(jsonData);
+                filteredData.sort(function(a, b) { return b.uniqueDates[0] - a.uniqueDates[0]; });
+                filteredData = filteredData.slice(0, 10);
+                localStorage.setItem('targetData', JSON.stringify(filteredData));
+                console.log('上傳匯入完成:', jsonData);
+
+                refreshTable();
+                event.target.value = ''; // 重置，允許重複上傳同一檔案
+            };
+            reader.readAsText(file);
+        }
     </script>
     <body onload="refreshTable();">
         <div class="mb-3">
-            <label for="coinInputs3" class="form-label">直接轉換強勢族群 ver.20251129</label>
+            <label for="coinInputs3" class="form-label">直接轉換強勢族群 ver.20260302</label>
             <textarea class="form-control" id="coinInputs3" rows="7"></textarea>
         </div>
         <div class="mb-3">
@@ -159,6 +228,8 @@
             <button type="submit" class="btn btn-primary" onclick="downloadLatestDay()">匯出最新一筆</button>
             <button type="submit" class="btn btn-primary" onclick="download7Day()">匯出最近七筆</button>
             <button type="submit" class="btn btn-primary" onclick="clearLocalStorage()">清除暫存區所有資料</button>
+            <input type="file" id="fileUpload" accept=".txt" style="display:none;" onchange="handleFileUpload(event)">
+            <button type="button" class="btn btn-success" onclick="triggerFileUpload()">上傳文字檔匯入</button>
         </div>
         <div class="mt-5">
             <table class="table">
