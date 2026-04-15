@@ -38,6 +38,7 @@
             text = text.replaceAll('#N/A','')
             text = text.replace('币安人生','BIANRENSHENG')
             text = text.replace('我踏马来了','WOTAMALAILIAO')
+            text = text.replace('龙虾','LONGXIA')
             console.log("1:", text);
             let firstGroup = [...text.matchAll(firstPattern)].map(match => match[1]);
             console.log("2:", firstGroup)
