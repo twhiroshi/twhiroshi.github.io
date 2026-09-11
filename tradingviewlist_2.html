@@ -18,6 +18,83 @@
             URL.revokeObjectURL(url);
         }
 
+        const tradingViewSymbolMappingUrl =
+            'https://gist.githubusercontent.com/twhiroshi/' +
+            '992853f4f26375b33235617f69332e58/raw/' +
+            'tradingview_symbol_mapping.json';
+        const tradingViewSymbolMappingCacheKey = 'tradingViewSymbolMapping';
+        let tradingViewSymbolMapping = null;
+
+        async function loadTradingViewSymbolMapping() {
+            if (tradingViewSymbolMapping !== null) {
+                return tradingViewSymbolMapping;
+            }
+
+            try {
+                const response = await fetch(
+                    `${tradingViewSymbolMappingUrl}?t=${Date.now()}`,
+                    {cache: 'no-store'}
+                );
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                tradingViewSymbolMapping = await response.json();
+                localStorage.setItem(
+                    tradingViewSymbolMappingCacheKey,
+                    JSON.stringify(tradingViewSymbolMapping)
+                );
+                return tradingViewSymbolMapping;
+            } catch (error) {
+                const cachedMapping = localStorage.getItem(
+                    tradingViewSymbolMappingCacheKey
+                );
+                if (cachedMapping !== null) {
+                    console.warn('Gist 載入失敗，改用本機 symbol mapping cache', error);
+                    tradingViewSymbolMapping = JSON.parse(cachedMapping);
+                    return tradingViewSymbolMapping;
+                }
+                throw error;
+            }
+        }
+
+        function hasUnresolvedChineseSymbol(text) {
+            return /BINANCE:[^,\n]*[\u3400-\u9fff][^,\n]*/u.test(text);
+        }
+
+        async function replaceTradingViewSymbols(text) {
+            let mapping;
+            try {
+                mapping = await loadTradingViewSymbolMapping();
+            } catch (error) {
+                if (hasUnresolvedChineseSymbol(text)) {
+                    throw new Error(`無法載入中文 symbol mapping：${error.message}`);
+                }
+                console.warn('Symbol mapping 載入失敗，但清單沒有中文 symbol', error);
+                return text;
+            }
+
+            for (const [binanceSymbol, tradingViewSymbol]
+                of Object.entries(mapping)) {
+                text = text.replaceAll(
+                    `BINANCE:${binanceSymbol}.P`,
+                    tradingViewSymbol
+                );
+            }
+
+            if (hasUnresolvedChineseSymbol(text)) {
+                throw new Error('清單中仍有尚未配對的中文 symbol，請稍後再試');
+            }
+            return text;
+        }
+
+        function initializePage() {
+            refreshTable();
+            loadTradingViewSymbolMapping().catch(function(error) {
+                console.warn('預先載入 symbol mapping 失敗', error);
+            });
+        }
+
         function copyToLocalStorage() {
             var copyText3 = document.getElementById("coinInputs3");
             copyText3.select();
@@ -36,10 +113,6 @@
             text = text.replaceAll('🗓'+uniqueDates, '\n').replaceAll('🗓 '+uniqueDates, '\n').replaceAll('🔸', '\n');
             text = text.replaceAll('🗓️'+uniqueDates, '\n').replaceAll('🗓️ '+uniqueDates, '\n');
             text = text.replaceAll('#N/A','')
-            text = text.replace('币安人生','BIANRENSHENG')
-            text = text.replace('我踏马来了','WOTAMALAILIAO')
-            text = text.replace('牛来','NIULAI')
-            text = text.replace('哈基米','HAJIMI')
             console.log("1:", text);
             let firstGroup = [...text.matchAll(firstPattern)].map(match => match[1]);
             console.log("2:", firstGroup)
@@ -105,7 +178,7 @@
             });
         }
 
-        function downloadLatestDay() {
+        async function downloadLatestDay() {
             var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
             storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
             var latestData = storedData[0];
@@ -119,13 +192,20 @@
             result = result.replaceAll("：",",BINANCE:");
             result = result + "USDT.P";
             result = "###大盤,BINANCE:BTCUSDT.P,BINANCE:ETHUSDT.P,BINANCE:BNBUSDT.P,\n" + result;
+
+            try {
+                result = await replaceTradingViewSymbols(result);
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
             
             console.log(result)
             var filename = "強勢標的_" + latestData.uniqueDates[0] + ".txt"
             download(filename, result);
         }
 
-        function download7Day() {
+        async function download7Day() {
             var storedData = JSON.parse(localStorage.getItem('targetData')) || [];
             storedData.sort((a, b) => b.uniqueDates[0] - a.uniqueDates[0]);
             var top7Data = storedData.slice(0, 7);
@@ -141,6 +221,12 @@
             result = result.join("");
             result = result.slice(0, -1);
             result = result.slice(1);
+            try {
+                result = await replaceTradingViewSymbols(result);
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
             console.log(result)
             var filename = "最近強勢標的_" + top7Data[0].uniqueDates[0] + '_' + top7Data[top7Data.length-1].uniqueDates[0] + ".txt";
             download(filename, result);
@@ -220,7 +306,7 @@
             reader.readAsText(file);
         }
     </script>
-    <body onload="refreshTable();">
+    <body onload="initializePage();">
         <div class="mb-3">
             <label for="coinInputs3" class="form-label">直接轉換強勢族群 ver.20260302</label>
             <textarea class="form-control" id="coinInputs3" rows="7"></textarea>
